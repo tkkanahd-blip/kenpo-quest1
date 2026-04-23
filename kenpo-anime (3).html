@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>けんぽうクエスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Yomogi&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* フォント読み込み失敗時のフォールバック */
+body { font-family: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif; }
+</style>
+<style>
+:root{
+  --sky1:#c8eaff;--sky2:#e8f6ff;--panel:#fffdf6;--panel2:#f5f0e8;
+  --border:#d0c098;--border2:#b8a880;--ink:#2d2010;--ink2:#5a4428;--ink3:#8a6a44;
+  --gold:#d4920a;--gold2:#f5b820;--red:#e03428;--red2:#ff6b5b;--red-bg:#fff0ee;
+  --blue:#2a6fc4;--blue2:#5a9ff0;--blue-bg:#eef4ff;--green:#2a9640;--green2:#5ec870;
+  --green-bg:#eeffee;--purple:#7040c0;--purple2:#a070e8;--purple-bg:#f4eeff;
+  --orange:#e07020;--hp:#e83030;--xp:#c89010;--shadow:rgba(80,50,20,0.18);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'M PLUS Rounded 1c',sans-serif;background:linear-gradient(180deg,#c8eaff 0%,#e8f6ff 55%,#d0e8b0 80%,#b0d890 100%);min-height:100vh;overflow-x:hidden;}
+.ptcl{position:fixed;inset:0;pointer-events:none;z-index:-1;}
+.p{position:absolute;border-radius:50%;animation:pfloat linear infinite;}
+@keyframes pfloat{0%,100%{transform:translateY(0);opacity:.7}50%{transform:translateY(-28px);opacity:1}}
+#app{position:relative;z-index:2;max-width:660px;margin:0 auto;padding:12px;min-height:100vh;}
+.screen{display:none;}.screen.on{display:block;animation:sIn .4s ease;}
+@keyframes sIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+ruby{ruby-align:center;}rt{font-size:.52em;color:var(--ink3);}
+
+/* TITLE */
+.title-wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:32px 16px;position:relative;z-index:2;}
+.title-hero{font-size:6rem;animation:heroIdle 2.5s ease-in-out infinite;}
+@keyframes heroIdle{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+.title-logo{font-family:'Yomogi',cursive;font-size:clamp(2rem,7vw,3rem);color:var(--ink);text-shadow:3px 4px 0 var(--gold2),5px 6px 0 rgba(0,0,0,.12);line-height:1.25;}
+.story-box{background:rgba(255,255,255,.6);border:2px solid var(--border);border-radius:14px;padding:16px 20px;max-width:480px;width:100%;font-size:.84rem;color:var(--ink2);line-height:2.2;text-align:left;}
+.story-box b{color:var(--blue);}
+.btn-start{background:linear-gradient(135deg,var(--gold2),var(--gold));color:white;border:none;border-radius:30px;padding:15px 44px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:1.1rem;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(212,146,10,.4);transition:all .2s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:10;}
+.btn-start:hover{transform:translateY(-3px) scale(1.04);}
+
+/* HUD */
+.hud{background:var(--panel);border:2.5px solid var(--border);border-radius:16px;padding:12px 16px;margin-bottom:8px;box-shadow:0 4px 14px var(--shadow);display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;}
+.hud-portrait{width:50px;height:50px;border-radius:50%;border:2.5px solid var(--gold2);background:radial-gradient(circle at 38% 34%,#fff4d0,#e8c070);display:flex;align-items:center;justify-content:center;font-size:1.9rem;}
+.hud-bars{display:flex;flex-direction:column;gap:5px;}
+.bar-row{display:flex;align-items:center;gap:6px;}
+.bar-lbl{font-size:.6rem;font-weight:800;color:var(--ink3);width:22px;}
+.bar-track{flex:1;height:8px;border-radius:99px;background:rgba(0,0,0,.08);overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;transition:width .6s;}
+.hp-f{background:linear-gradient(90deg,#c01010,var(--hp));}
+.xp-f{background:linear-gradient(90deg,#906000,var(--xp));}
+.bar-num{font-size:.6rem;color:var(--ink2);width:50px;text-align:right;white-space:nowrap;}
+.hud-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.lv-chip{background:linear-gradient(135deg,var(--gold2),var(--gold));color:white;font-weight:800;font-size:.8rem;padding:3px 12px;border-radius:20px;}
+.gold-chip{font-size:.75rem;color:var(--gold);font-weight:800;}
+.badge-strip{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.badge-tag{background:rgba(212,146,10,.1);border:1.5px solid var(--gold);border-radius:8px;padding:2px 8px;font-size:.65rem;color:var(--gold);}
+
+/* MAP */
+.map-box{background:var(--panel);border:2.5px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 6px 20px var(--shadow);}
+.map-title{font-family:'Yomogi',cursive;font-size:1.1rem;color:var(--gold);text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed var(--border);display:flex;align-items:center;justify-content:center;gap:10px;}
+.reset-btn{background:none;border:1.5px solid var(--border2);border-radius:12px;padding:3px 10px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.65rem;font-weight:700;color:var(--ink3);cursor:pointer;}
+.prin-card{background:white;border:2.5px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 3px 10px var(--shadow);}
+.prin-header{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;}
+.prin-icon{font-size:2rem;flex-shrink:0;}
+.prin-texts{flex:1;}
+.prin-name{font-size:.95rem;font-weight:800;color:var(--ink);}
+.prin-tagline{font-size:.73rem;color:var(--ink3);margin-top:2px;line-height:1.5;}
+.prin-status{font-size:.68rem;font-weight:800;padding:3px 10px;border-radius:10px;flex-shrink:0;white-space:nowrap;}
+.st-lock{background:#eee;color:#999;}.st-learned{background:var(--blue-bg);color:var(--blue);}
+.st-passed{background:var(--green-bg);color:var(--green);}.st-cleared{background:#fff8c0;color:var(--gold);}
+.prin-body{display:none;padding:0 14px 14px;border-top:1.5px dashed var(--border);}
+.prin-card.open .prin-body{display:block;animation:sIn .3s ease;}
+
+/* LEARN */
+.learn-box{background:var(--panel);border:2.5px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 6px 20px var(--shadow);}
+.learn-title{font-family:'Yomogi',cursive;font-size:1.1rem;color:var(--gold);text-align:center;margin-bottom:14px;padding-bottom:10px;border-bottom:2px dashed var(--border);}
+.learn-hero-box{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#fff9e8,#fffce8);border:2px solid #f0d880;border-radius:14px;padding:13px;margin-bottom:14px;}
+.learn-hero-face{font-size:2.6rem;flex-shrink:0;}
+.learn-hero-name{font-size:.7rem;font-weight:800;color:var(--gold);margin-bottom:3px;}
+.learn-hero-text{font-size:.82rem;color:var(--ink2);line-height:1.9;}
+.learn-sec{font-family:'Yomogi',cursive;font-size:.9rem;color:var(--blue);margin:14px 0 8px;padding-left:8px;border-left:4px solid var(--blue2);}
+.learn-points{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.lp{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border-radius:10px;padding:10px 12px;border-left:4px solid var(--border2);}
+.lp.p-blue{border-left-color:var(--blue2);}.lp.p-green{border-left-color:var(--green2);}
+.lp.p-red{border-left-color:var(--red2);}.lp.p-gold{border-left-color:var(--gold2);}.lp.p-purple{border-left-color:var(--purple2);}
+.lp-icon{font-size:1.5rem;flex-shrink:0;margin-top:1px;}
+.lp-body{font-size:.81rem;color:var(--ink2);line-height:1.9;}.lp-body b{color:var(--ink);}
+.law-box{background:var(--ink);border-radius:10px;padding:10px 14px;margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.law-lbl{font-size:.7rem;color:var(--gold2);font-weight:800;margin-right:4px;}
+.law-tag{background:rgba(255,255,255,.12);color:#ffe;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:6px;}
+.learn-summary{background:linear-gradient(135deg,#eef8ff,#f0fff4);border:2px solid var(--blue2);border-radius:12px;padding:12px 14px;margin-top:10px;font-size:.8rem;color:var(--ink2);line-height:1.9;}
+.btn-primary{width:100%;margin-top:12px;background:linear-gradient(135deg,var(--blue2),var(--blue));color:white;border:none;border-radius:20px;padding:12px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(42,111,196,.3);transition:all .2s;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-purple{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--purple2),var(--purple));color:white;border:none;border-radius:20px;padding:12px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(112,64,192,.3);transition:all .2s;}
+.btn-purple:hover{transform:translateY(-2px);}
+.locked-hint{font-size:.75rem;color:var(--ink3);text-align:center;padding:8px;background:var(--panel2);border-radius:10px;border:1.5px dashed var(--border);margin-top:8px;}
+.btn-back{background:none;border:2px solid var(--border2);border-radius:20px;padding:6px 16px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.76rem;font-weight:700;color:var(--ink3);cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.btn-back:hover{border-color:var(--gold);color:var(--gold);}
+
+/* WS */
+.ws-title{font-family:'Yomogi',cursive;font-size:1.05rem;color:var(--gold);text-align:center;margin-bottom:8px;}
+.ws-intro{font-size:.76rem;color:var(--ink3);text-align:center;margin-bottom:12px;line-height:1.8;}
+.ws-q{background:white;border:2px solid var(--border);border-radius:12px;padding:13px;margin-bottom:10px;box-shadow:0 2px 6px var(--shadow);}
+.ws-q-num{font-size:.65rem;font-weight:800;color:var(--blue);margin-bottom:4px;}
+.ws-q-text{font-size:.83rem;color:var(--ink);line-height:1.9;margin-bottom:10px;font-weight:700;}
+.ws-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ws-opt{background:var(--panel2);border:2px solid var(--border);border-radius:10px;padding:10px 8px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.78rem;font-weight:700;color:var(--ink);cursor:pointer;text-align:center;line-height:1.5;transition:all .2s;}
+.ws-opt:hover{border-color:var(--blue2);background:var(--blue-bg);}
+.ws-opt.chosen-ok{border-color:var(--green2);background:var(--green-bg);color:var(--green);}
+.ws-opt.chosen-ng{border-color:var(--red2);background:var(--red-bg);color:var(--red);}
+.ws-opt.off{pointer-events:none;}
+.ws-feedback{font-size:.76rem;margin-top:8px;padding:8px 10px;border-radius:8px;line-height:1.8;display:none;}
+.ws-feedback.show{display:block;}.ws-feedback.ok{background:var(--green-bg);color:var(--green);}
+.ws-feedback.ng{background:var(--red-bg);color:var(--red);}
+.ws-result{background:var(--panel2);border:2px solid var(--border);border-radius:12px;padding:14px;text-align:center;margin-top:10px;display:none;}
+.ws-result.show{display:block;animation:sIn .4s ease;}
+.ws-score{font-size:1.6rem;font-weight:800;color:var(--gold);}
+.ws-msg{font-size:.82rem;color:var(--ink2);margin-top:6px;line-height:1.8;}
+.btn-retry{width:100%;margin-top:8px;background:white;border:2px solid var(--border2);border-radius:20px;padding:11px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.85rem;font-weight:700;color:var(--ink3);cursor:pointer;transition:all .2s;}
+.btn-retry:hover{border-color:var(--gold);color:var(--gold);}
+
+/* BATTLE */
+.stage-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.stage-chip{background:linear-gradient(135deg,var(--purple2),var(--purple));color:white;font-size:.7rem;font-weight:800;padding:4px 12px;border-radius:20px;}
+.topic-chip{background:var(--purple-bg);color:var(--purple);font-size:.7rem;font-weight:800;padding:4px 12px;border-radius:20px;border:1.5px solid var(--purple2);}
+.coop-chip{background:#fff0e0;color:var(--orange);font-size:.7rem;font-weight:800;padding:4px 12px;border-radius:20px;border:1.5px solid var(--orange);animation:coopPulse 1.5s ease-in-out infinite;}
+@keyframes coopPulse{0%,100%{box-shadow:0 0 0 0 rgba(224,112,32,.3)}50%{box-shadow:0 0 0 6px rgba(224,112,32,0)}}
+.q-progress{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap;align-items:center;}
+.q-dot{width:10px;height:10px;border-radius:50%;background:#ddd;transition:all .3s;flex-shrink:0;}
+.q-dot.done{background:var(--green2);}.q-dot.cur{background:var(--gold2);transform:scale(1.3);}.q-dot.fail{background:var(--red2);}
+.q-dot.coop-dot{background:var(--orange);border:2px solid #fff;}
+.battle-scene{border:2.5px solid var(--border);border-radius:16px;overflow:hidden;position:relative;height:190px;margin-bottom:10px;box-shadow:0 6px 20px var(--shadow);}
+.a-cloud{position:absolute;background:white;border-radius:50px;filter:blur(2px);opacity:.9;animation:cloudDrift ease-in-out infinite alternate;}
+.ac1{width:90px;height:32px;top:14px;left:20px;animation-duration:4s;}.ac2{width:60px;height:22px;top:24px;left:150px;animation-duration:6s;}.ac3{width:75px;height:26px;top:10px;right:30px;animation-duration:5s;}
+@keyframes cloudDrift{from{transform:translateX(-8px)}to{transform:translateX(8px)}}
+.a-sun{position:absolute;top:10px;right:16px;width:40px;height:40px;background:radial-gradient(circle,#fff8a0 0%,#ffd020 45%,transparent 70%);border-radius:50%;box-shadow:0 0 24px rgba(255,210,32,.6);}
+.a-tree{position:absolute;bottom:26px;font-size:2.6rem;filter:drop-shadow(1px 2px 6px rgba(0,0,0,.2));}
+.at1{left:4px}.at2{left:44px}.at3{right:4px}.at4{right:42px}
+.a-ground{position:absolute;bottom:0;left:0;right:0;height:30px;background:linear-gradient(180deg,#8a6838,#5a3818);border-top:2px solid #a07840;}
+.fighter{position:absolute;bottom:26px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.fighter.hero{left:16px;}.fighter.hero2{left:72px;}.fighter.enemy{right:14px;}
+.f-sprite{font-size:3.8rem;line-height:1;filter:drop-shadow(2px 4px 10px rgba(0,0,0,.25));transition:all .25s;}
+.f-sprite.do-atk{animation:atkSwing .5s ease;}
+@keyframes atkSwing{0%{transform:none}30%{transform:translateX(44px) scaleX(1.1) rotate(6deg)}65%{transform:translateX(-4px)}100%{transform:none}}
+.f-sprite.do-hit{animation:hitFlash .5s ease;}
+@keyframes hitFlash{0%{filter:drop-shadow(2px 4px 10px rgba(0,0,0,.25))}25%{filter:drop-shadow(0 0 24px white) brightness(2.5)}65%{transform:translateX(-6px)}100%{filter:drop-shadow(2px 4px 10px rgba(0,0,0,.25));transform:none}}
+.f-sprite.do-die{animation:dieFall .9s ease forwards;}
+@keyframes dieFall{0%{transform:none;opacity:1}60%{transform:translateY(12px) rotate(18deg);opacity:.5}100%{transform:translateY(30px) rotate(28deg) scale(.4);opacity:0}}
+.boss-in{animation:bossIn .6s ease;}
+@keyframes bossIn{0%{transform:scale(0) rotate(-15deg);filter:brightness(3)}60%{transform:scale(1.15)}100%{transform:none;filter:none}}
+.f-name{font-size:.58rem;font-weight:800;color:white;text-shadow:1px 1px 4px rgba(0,0,0,.8);}
+.fdmg{position:absolute;font-size:1.8rem;font-weight:800;color:#fff040;text-shadow:2px 2px 0 rgba(0,0,0,.5);pointer-events:none;animation:fdmgRise 1.2s ease forwards;z-index:20;}
+.fdmg.p-dmg{color:#ff7070;font-size:1.4rem;}
+@keyframes fdmgRise{0%{opacity:1;transform:translateY(0) scale(.6)}30%{transform:translateY(-28px) scale(1.4)}100%{opacity:0;transform:translateY(-80px) scale(.9)}}
+.msg-box{background:var(--panel);border:2.5px solid var(--border);border-radius:14px;padding:12px 15px;min-height:78px;margin-bottom:8px;box-shadow:0 4px 14px var(--shadow);}
+.msg-scene{font-size:.82rem;color:var(--ink2);line-height:1.9;}
+.msg-enemy{font-size:.84rem;color:var(--red);line-height:1.9;margin-top:4px;}
+.msg-ok{font-size:.84rem;color:var(--green);line-height:1.9;}
+.msg-ng{font-size:.84rem;color:var(--red);line-height:1.9;}
+.msg-law{display:inline-block;background:var(--ink);color:var(--gold2);font-size:.66rem;font-weight:800;padding:2px 8px;border-radius:6px;margin-bottom:4px;}
+.msg-bonus{font-size:.7rem;color:var(--gold);margin-top:4px;}
+
+/* COOP */
+.coop-box{background:linear-gradient(135deg,#fff8e8,#fff0d8);border:2.5px solid var(--orange);border-radius:14px;padding:12px 15px;margin-bottom:8px;box-shadow:0 4px 14px var(--shadow);}
+.coop-title{font-size:.8rem;font-weight:800;color:var(--orange);margin-bottom:8px;text-align:center;}
+.coop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.coop-side{background:white;border:2px solid var(--border);border-radius:12px;padding:10px;}
+.coop-side-lbl{font-size:.7rem;font-weight:800;text-align:center;margin-bottom:8px;padding:4px;border-radius:8px;}
+.coop-p1-lbl{background:rgba(42,111,196,.1);color:var(--blue);}
+.coop-p2-lbl{background:rgba(112,64,192,.1);color:var(--purple);}
+.coop-opts{display:flex;flex-direction:column;gap:6px;}
+.coop-opt{background:var(--panel2);border:2px solid var(--border);border-radius:8px;padding:9px 8px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.76rem;font-weight:700;color:var(--ink);cursor:pointer;text-align:left;transition:all .2s;line-height:1.4;}
+.coop-opt:hover{border-color:var(--gold2);background:#fffbe8;}
+.coop-opt.sel-p1{border-color:var(--blue2);background:var(--blue-bg);color:var(--blue);}
+.coop-opt.sel-p2{border-color:var(--purple2);background:var(--purple-bg);color:var(--purple);}
+.coop-opt.is-off{pointer-events:none;opacity:.6;}
+.coop-opt.c-ok{border-color:var(--green2);background:var(--green-bg);color:var(--green);}
+.coop-opt.c-ng{border-color:var(--red2);background:var(--red-bg);color:var(--red);}
+.coop-wait{font-size:.72rem;color:var(--ink3);text-align:center;padding:10px;font-style:italic;}
+.coop-shield-bar{background:rgba(255,200,80,.9);border:2px solid var(--gold2);border-radius:20px;padding:5px 14px;font-size:.72rem;font-weight:800;color:var(--ink);text-align:center;margin-bottom:8px;animation:coopPulse 1.5s ease-in-out infinite;}
+
+/* NORMAL CHOICE */
+.choice-box{background:var(--panel);border:2.5px solid var(--border);border-radius:14px;padding:12px;box-shadow:0 4px 14px var(--shadow);}
+.choice-lbl{font-size:.7rem;font-weight:800;color:var(--ink3);text-align:center;margin-bottom:10px;}
+.choice-grid{display:grid;grid-template-columns:1fr;gap:8px;}
+.c-btn{background:linear-gradient(160deg,white,var(--panel2));border:2.5px solid var(--border);border-radius:12px;padding:12px 10px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.8rem;font-weight:700;color:var(--ink);cursor:pointer;text-align:left;display:flex;align-items:flex-start;gap:8px;line-height:1.5;transition:all .2s;box-shadow:0 2px 6px var(--shadow);}
+.c-btn:hover{transform:translateY(-3px);border-color:var(--gold2);}
+.c-btn.is-correct{border-color:var(--green2);background:linear-gradient(160deg,#e8ffe8,#d8f8d8);}
+.c-btn.is-wrong{border-color:var(--red2);background:linear-gradient(160deg,#ffe8e8,#f8d8d8);}
+.c-btn.is-reveal{border-color:var(--green2);opacity:.6;}
+.c-btn.is-off{pointer-events:none;}
+.c-letter{flex-shrink:0;width:24px;height:24px;background:var(--ink);color:var(--gold2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.76rem;font-weight:800;}
+.btn-next{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--purple2),var(--purple));color:white;border:none;border-radius:30px;padding:12px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(112,64,192,.35);transition:all .2s;}
+.btn-next:hover{transform:translateY(-2px);}
+
+/* LV UP */
+.lv-overlay{position:fixed;inset:0;background:rgba(30,15,0,.7);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;}
+.lv-box{background:var(--panel);border:3px solid var(--gold2);border-radius:24px;padding:26px 22px;text-align:center;max-width:300px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,.4);animation:lvPop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes lvPop{from{transform:scale(.4) rotate(-8deg);opacity:0}to{transform:none;opacity:1}}
+.lv-title{font-family:'Yomogi',cursive;font-size:2rem;color:var(--gold);margin-bottom:6px;}
+.lv-hero{font-size:4rem;animation:heroIdle 1.5s ease-in-out infinite;}
+.lv-table{background:var(--panel2);border:1.5px solid var(--border);border-radius:10px;padding:10px;margin:10px 0;text-align:left;}
+.lv-row{display:flex;justify-content:space-between;font-size:.78rem;padding:4px 0;border-bottom:1px solid var(--border);}
+.lv-row:last-child{border-bottom:none;}.lv-plus{color:var(--green);font-weight:800;}
+.lv-close{width:100%;padding:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:white;border:none;border-radius:20px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;}
+
+/* RESULT */
+.result-wrap{background:var(--panel);border:2.5px solid var(--border);border-radius:20px;padding:24px 18px;text-align:center;box-shadow:0 8px 28px var(--shadow);}
+.result-crest{font-size:4.5rem;animation:heroIdle 2.5s ease-in-out infinite;}
+.result-title{font-family:'Yomogi',cursive;font-size:1.8rem;color:var(--gold);margin:10px 0 4px;}
+.result-table{background:var(--panel2);border:1.5px solid var(--border);border-radius:12px;padding:12px;margin:12px auto;max-width:340px;text-align:left;}
+.rt-row{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 0;border-bottom:1px solid var(--border);}
+.rt-row:last-child{border-bottom:none;}.rt-val{font-weight:800;color:var(--gold);}.rt-val.ok{color:var(--green);}
+.summary-card{background:var(--green-bg);border:1.5px solid var(--green2);border-radius:12px;padding:11px 13px;margin:8px auto;max-width:380px;text-align:left;font-size:.78rem;color:var(--ink2);line-height:2;}
+.summary-head{font-size:.74rem;font-weight:800;color:var(--green);margin-bottom:5px;}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:white;border:none;border-radius:20px;padding:11px 22px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.84rem;font-weight:800;cursor:pointer;transition:all .2s;}
+.btn-gold:hover{transform:translateY(-1px);}
+.btn-plain{background:white;color:var(--ink2);border:2px solid var(--border2);border-radius:20px;padding:10px 20px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-plain:hover{border-color:var(--gold);}
+
+/* ENDROLL */
+#endroll{position:fixed;inset:0;background:#000;z-index:900;display:none;overflow:hidden;}
+#endroll.show{display:block;}
+.er-stars{position:absolute;inset:0;}
+.er-star{position:absolute;background:white;border-radius:50%;animation:erTwinkle linear infinite;}
+@keyframes erTwinkle{0%,100%{opacity:.2}50%{opacity:1}}
+.er-scroll-wrap{position:absolute;left:50%;transform:translateX(-50%);width:92%;max-width:480px;bottom:-120%;animation:erScroll 26s linear forwards;}
+@keyframes erScroll{0%{bottom:-120%}100%{bottom:120%}}
+.er-logo{font-family:'Yomogi',cursive;font-size:2.4rem;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,.8);margin-bottom:8px;text-align:center;}
+.er-sub{font-size:1rem;color:#aaddff;margin-bottom:30px;text-align:center;}
+.er-sec-title{font-family:'Yomogi',cursive;font-size:1.1rem;color:#f5b820;margin:20px 0 8px;border-bottom:1px solid rgba(255,215,0,.3);padding-bottom:6px;text-align:center;}
+.er-item-name{font-size:1.15rem;color:white;margin:6px 0 1px;text-align:center;text-shadow:0 0 10px rgba(255,255,255,.4);}
+.er-item-desc{font-size:.78rem;color:#88aacc;margin-bottom:6px;text-align:center;}
+.er-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+.er-badge{font-size:2rem;}
+.er-thanks{font-family:'Yomogi',cursive;font-size:1.6rem;color:#ffd700;margin-top:24px;text-shadow:0 0 20px rgba(255,215,0,.6);text-align:center;}
+.er-msg{font-size:.88rem;color:#ccddff;line-height:2.4;margin-top:10px;text-align:center;}
+.er-end{font-family:'Yomogi',cursive;font-size:2rem;color:#ffd700;margin-top:30px;text-align:center;letter-spacing:.3em;}
+.er-skip{position:fixed;bottom:20px;right:20px;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:8px 18px;color:white;font-size:.78rem;cursor:pointer;z-index:901;font-family:'M PLUS Rounded 1c',sans-serif;}
+
+/* FINAL TEST */
+.ft-q-card{background:white;border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 3px 10px var(--shadow);transition:all .3s;}
+.ft-q-card.done-ok{border-color:var(--green2);background:linear-gradient(160deg,#f0fff4,#e8ffe8);}
+.ft-q-card.done-ng{border-color:var(--red2);background:linear-gradient(160deg,#fff4f4,#ffe8e8);}
+.ft-q-header{display:flex;gap:8px;align-items:flex-start;margin-bottom:10px;}
+.ft-q-num{background:var(--ink);color:var(--gold2);font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:6px;flex-shrink:0;white-space:nowrap;}
+.ft-q-tag{font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:6px;flex-shrink:0;}
+.tag-shuken{background:rgba(212,146,10,.12);color:var(--gold);}
+.tag-jinken{background:rgba(90,159,240,.15);color:var(--blue);}
+.tag-heiwa{background:rgba(94,200,112,.15);color:var(--green);}
+.tag-kokkai{background:rgba(160,112,232,.15);color:var(--purple);}
+.ft-q-text{font-size:.84rem;font-weight:700;color:var(--ink);line-height:1.9;flex:1;}
+.ft-opts{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ft-opt{background:var(--panel2);border:2px solid var(--border);border-radius:10px;padding:10px 8px;font-family:'M PLUS Rounded 1c',sans-serif;font-size:.78rem;font-weight:700;color:var(--ink);cursor:pointer;text-align:center;line-height:1.5;transition:all .2s;}
+.ft-opt:hover{border-color:var(--blue2);background:var(--blue-bg);}
+.ft-opt.ok{border-color:var(--green2);background:var(--green-bg);color:var(--green);}
+.ft-opt.ng{border-color:var(--red2);background:var(--red-bg);color:var(--red);}
+.ft-opt.reveal{border-color:var(--green2);opacity:.6;}
+.ft-opt.off{pointer-events:none;}
+.ft-fb{font-size:.76rem;margin-top:8px;padding:8px 10px;border-radius:8px;line-height:1.8;display:none;}
+.ft-fb.show{display:block;}
+.ft-fb.ok{background:var(--green-bg);color:var(--green);}
+.ft-fb.ng{background:var(--red-bg);color:var(--red);}
+</style>
+</head>
+<body>
+<div class="ptcl" id="ptcl"></div>
+
+<!-- LV UP -->
+<div id="lvOverlay" style="display:none">
+  <div class="lv-overlay">
+    <div class="lv-box">
+      <div class="lv-title">⭐ レベルアップ！</div>
+      <div class="lv-hero">🧙‍♂️</div>
+      <div class="lv-table" id="lvTable"></div>
+      <button class="lv-close" onclick="closeLv()">つぎへ ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENDROLL -->
+<div id="endroll">
+  <div class="er-stars" id="erStars"></div>
+  <div class="er-scroll-wrap" id="erScroll"></div>
+  <button class="er-skip" onclick="closeEndroll()">スキップ ✕</button>
+</div>
+
+<div id="app">
+<!-- TITLE -->
+<div class="screen on" id="s-title">
+  <div class="title-wrap">
+    <div class="title-hero">🧙‍♂️</div>
+    <div>
+      <div class="title-logo">⚔️ <ruby>憲法<rt>けんぽう</rt></ruby>クエスト ⚔️</div>
+      <div style="font-size:.85rem;color:var(--ink3)">～<ruby>自由<rt>じゆう</rt></ruby>の<ruby>王国<rt>おうこく</rt></ruby>を<ruby>守<rt>まも</rt></ruby>れ！～</div>
+    </div>
+    <div class="story-box">
+      <ruby>平和<rt>へいわ</rt></ruby>だった<ruby>王国<rt>おうこく</rt></ruby>に<ruby>独裁<rt>どくさい</rt></ruby>の<ruby>魔王<rt>まおう</rt></ruby><b>「ドクサイ」</b>が<ruby>現<rt>あらわ</rt></ruby>れた。<br>
+      <ruby>自由<rt>じゆう</rt></ruby>・<ruby>平和<rt>へいわ</rt></ruby>・<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>が<ruby>奪<rt>うば</rt></ruby>われようとしている……<br><br>
+      <ruby>若<rt>わか</rt></ruby>き<ruby>裁判官<rt>さいばんかん</rt></ruby>よ、<b><ruby>憲法<rt>けんぽう</rt></ruby>の<ruby>知恵<rt>ちえ</rt></ruby></b>で<ruby>王国<rt>おうこく</rt></ruby>を<ruby>救<rt>すく</rt></ruby>え！<br>
+      <span style="color:var(--orange);font-weight:800">🤝 <ruby>協力<rt>きょうりょく</rt></ruby>バトルでは<ruby>二人<rt>ふたり</rt></ruby>で<ruby>同<rt>おな</rt></ruby>じ<ruby>答<rt>こた</rt></ruby>えを<ruby>選<rt>えら</rt></ruby>ぶと<ruby>必殺技<rt>ひっさつわざ</rt></ruby>発動！</span>
+    </div>
+    <button class="btn-start" onclick="gotoWorld()" ontouchstart="gotoWorld()">⚔ <ruby>冒険<rt>ぼうけん</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>める ⚔</button>
+    <div style="font-size:.65rem;color:var(--ink3);opacity:.6"><ruby>小学校<rt>しょうがっこう</rt></ruby><ruby>高学年<rt>こうがくねん</rt></ruby><ruby>向<rt>む</rt></ruby>け <ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby><ruby>学習<rt>がくしゅう</rt></ruby>RPG</div>
+  </div>
+</div>
+<!-- WORLD -->
+<div class="screen" id="s-world">
+  <div class="hud">
+    <div class="hud-portrait">🧙‍♂️</div>
+    <div class="hud-bars">
+      <div class="bar-row"><span class="bar-lbl">HP</span><div class="bar-track"><div class="bar-fill hp-f" id="bHp"></div></div><span class="bar-num" id="vHp">100/100</span></div>
+      <div class="bar-row"><span class="bar-lbl">EXP</span><div class="bar-track"><div class="bar-fill xp-f" id="bXp"></div></div><span class="bar-num" id="vXp">0/100</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="lv-chip" id="vLv">Lv.1</div>
+      <div class="gold-chip" id="vGold">💰 0G</div>
+    </div>
+  </div>
+  <div class="badge-strip" id="badgeStrip"></div>
+  <div class="map-box">
+    <div class="map-title"><span>✦ ワールドマップ ✦</span><button class="reset-btn" onclick="confirmReset()">🔄 リセット</button></div>
+    <div id="principleList"></div>
+  </div>
+</div>
+<!-- LEARN -->
+<div class="screen" id="s-learn">
+  <button class="btn-back" onclick="showScreen('s-world')">← マップへ</button>
+  <div id="learnContent"></div>
+</div>
+<!-- WS -->
+<div class="screen" id="s-ws">
+  <button class="btn-back" id="wsBtnBack">← <ruby>学習<rt>がくしゅう</rt></ruby>にもどる</button>
+  <div id="wsContent"></div>
+</div>
+<!-- BATTLE -->
+<div class="screen" id="s-battle">
+  <button class="btn-back" onclick="showScreen('s-world')">← マップへ</button>
+  <div class="stage-bar" id="stageBar">
+    <div class="stage-chip" id="stageChip">ステージ1</div>
+    <div class="topic-chip" id="topicChip"></div>
+  </div>
+  <div class="q-progress" id="qProgress"></div>
+  <div class="battle-scene" id="battleScene">
+    <div class="a-cloud ac1"></div><div class="a-cloud ac2"></div><div class="a-cloud ac3"></div>
+    <div class="a-sun"></div>
+    <div class="a-tree at1">🌲</div><div class="a-tree at2">🌳</div><div class="a-tree at3">🌲</div><div class="a-tree at4">🌳</div>
+    <div class="a-ground"></div>
+    <div class="fighter hero"><div class="f-sprite" id="heroSp">🧙‍♂️</div><div class="f-name">P1</div></div>
+    <div class="fighter hero2" id="hero2Slot" style="display:none"><div class="f-sprite" id="hero2Sp">🦸</div><div class="f-name">P2</div></div>
+    <div class="fighter enemy"><div class="f-sprite" id="enemySp">👹</div><div class="f-name" id="enemyNm"></div></div>
+  </div>
+  <div id="msgArea"></div>
+  <div id="choiceArea"></div>
+</div>
+<!-- RESULT -->
+<div class="screen" id="s-result">
+  <div class="result-wrap" id="resultWrap"></div>
+</div>
+<!-- FINAL TEST -->
+<div class="screen" id="s-finaltest">
+  <div class="hud" style="margin-bottom:8px">
+    <div class="hud-portrait" style="font-size:1.6rem">📜</div>
+    <div class="hud-bars">
+      <div class="bar-row"><span class="bar-lbl" style="width:28px;font-size:.58rem">進捗</span><div class="bar-track"><div class="bar-fill xp-f" id="ftProg"></div></div><span class="bar-num" id="ftNum">0/25</span></div>
+    </div>
+    <div class="hud-right">
+      <div class="lv-chip" id="ftScore" style="background:linear-gradient(135deg,var(--green2),var(--green))">正解 0</div>
+    </div>
+  </div>
+  <div style="background:linear-gradient(135deg,#fff9e8,#fffce8);border:2px solid var(--gold2);border-radius:14px;padding:11px 14px;margin-bottom:10px;text-align:center;">
+    <div style="font-family:'Yomogi',cursive;font-size:1rem;color:var(--gold)">📜 最終確認テスト</div>
+    <div style="font-size:.75rem;color:var(--ink3);margin-top:3px">全4ステージの総まとめ！25問に挑戦しよう</div>
+  </div>
+  <div id="ftQArea"></div>
+</div>
+<!-- FINAL TEST RESULT -->
+<div class="screen" id="s-ftresult">
+  <div class="result-wrap" id="ftResultWrap"></div>
+</div>
+</div>
+<script>
+// ══════════════════════════════════════════════════════
+// PRINCIPLES DATA
+// ══════════════════════════════════════════════════════
+var PRINCIPLES=[
+{id:0,icon:'👑',
+ name:'<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>',plainName:'国民主権',
+ tagline:'<ruby>国<rt>くに</rt></ruby>を<ruby>動<rt>うご</rt></ruby>かすのはわたしたち！',
+ learn:{
+  intro:'むかし<ruby>国<rt>くに</rt></ruby>のことを<ruby>決<rt>き</rt></ruby>めるのは<ruby>王様<rt>おうさま</rt></ruby>だけでした。でも<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>では「<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>にある」と<ruby>定<rt>さだ</rt></ruby>めたんだ！',
+  points:[
+   {c:'p-blue',i:'🗳️',t:'<b><ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>代表者<rt>だいひょうしゃ</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶ</b>ことで、みんなの<ruby>意見<rt>いけん</rt></ruby>を<ruby>政治<rt>せいじ</rt></ruby>に<ruby>届<rt>とど</rt></ruby>けるしくみが<b><ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby></b>だよ。'},
+   {c:'p-red',i:'🚫',t:'どんな<ruby>人<rt>ひと</rt></ruby>でも、<b><ruby>一部<rt>いちぶ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>だけが<ruby>勝手<rt>かって</rt></ruby>に<ruby>決<rt>き</rt></ruby>める</b>ことは<ruby>憲法<rt>けんぽう</rt></ruby>が<ruby>許<rt>ゆる</rt></ruby>していない。'},
+   {c:'p-gold',i:'📜',t:'<ruby>憲法<rt>けんぽう</rt></ruby>は<b><ruby>権力者<rt>けんりょくしゃ</rt></ruby>（<ruby>政府<rt>せいふ</rt></ruby>・<ruby>大臣<rt>だいじん</rt></ruby>・<ruby>国会議員<rt>こっかいぎいん</rt></ruby>など）が<ruby>守<rt>まも</rt></ruby>らなければならないルール</b>。<ruby>権力<rt>けんりょく</rt></ruby>が<ruby>暴走<rt>ぼうそう</rt></ruby>しないようにして<ruby>国民<rt>こくみん</rt></ruby>の<ruby>権利<rt>けんり</rt></ruby>を<ruby>守<rt>まも</rt></ruby>るためにあるんだよ（第99条）。'},
+  ],
+  lalalalaws:['<ruby>憲法<rt>けんぽう</rt></ruby> <ruby>前文<rt>ぜんぶん</rt></ruby>','第1条','第15条','第99条'],
+  summary:'<b><ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>にある</b>。<ruby>選挙<rt>せんきょ</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>が<ruby>政治<rt>せいじ</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>するための<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>手段<rt>しゅだん</rt></ruby>！',
+ },
+ ws:[
+  {q:'<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>はいつ<ruby>公布<rt>こうふ</rt></ruby>された？',opts:['1945<ruby>年<rt>ねん</rt></ruby>','1946<ruby>年<rt>ねん</rt></ruby>','1950<ruby>年<rt>ねん</rt></ruby>','1952<ruby>年<rt>ねん</rt></ruby>'],ans:1,ok:'正解！1946<ruby>年<rt>ねん</rt></ruby>11<ruby>月<rt>がつ</rt></ruby>3<ruby>日<rt>にち</rt></ruby>に<ruby>公布<rt>こうふ</rt></ruby>されたよ！',ng:'ちがう！1946<ruby>年<rt>ねん</rt></ruby>11<ruby>月<rt>がつ</rt></ruby>3<ruby>日<rt>にち</rt></ruby>に<ruby>公布<rt>こうふ</rt></ruby>されたよ。'},
+  {q:'<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>の<ruby>三原則<rt>さんげんそく</rt></ruby>はどれ？',opts:['<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>・<ruby>人権尊重<rt>じんけんそんちょう</rt></ruby>・<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>','<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>・<ruby>自由主義<rt>じゆうしゅぎ</rt></ruby>・<ruby>平等主義<rt>びょうどうしゅぎ</rt></ruby>','<ruby>選挙<rt>せんきょ</rt></ruby>・<ruby>裁判<rt>さいばん</rt></ruby>・<ruby>議会<rt>ぎかい</rt></ruby>','<ruby>国会<rt>こっかい</rt></ruby>・<ruby>内閣<rt>ないかく</rt></ruby>・<ruby>裁判所<rt>さいばんしょ</rt></ruby>'],ans:0,ok:'正解！<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>・<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>の<ruby>尊重<rt>そんちょう</rt></ruby>・<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>の<ruby>三原則<rt>さんげんそく</rt></ruby>だよ！',ng:'ちがう！<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>・<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>の<ruby>尊重<rt>そんちょう</rt></ruby>・<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>が<ruby>三原則<rt>さんげんそく</rt></ruby>だよ。'},
+  {q:'「<ruby>主権<rt>しゅけん</rt></ruby>」とはどういう<ruby>意味<rt>いみ</rt></ruby>？',opts:['<ruby>国<rt>くに</rt></ruby>の<ruby>中心<rt>ちゅうしん</rt></ruby>になって<ruby>物事<rt>ものごと</rt></ruby>を<ruby>決<rt>き</rt></ruby>める<ruby>力<rt>ちから</rt></ruby>','<ruby>国<rt>くに</rt></ruby>のお<ruby>金<rt>かね</rt></ruby>を<ruby>管理<rt>かんり</rt></ruby>する<ruby>力<rt>ちから</rt></ruby>','<ruby>軍隊<rt>ぐんたい</rt></ruby>をまとめる<ruby>力<rt>ちから</rt></ruby>','<ruby>外国<rt>がいこく</rt></ruby>と<ruby>交流<rt>こうりゅう</rt></ruby>する<ruby>力<rt>ちから</rt></ruby>'],ans:0,ok:'正解！<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国<rt>くに</rt></ruby>の<ruby>中心<rt>ちゅうしん</rt></ruby>になって<ruby>物事<rt>ものごと</rt></ruby>を<ruby>決<rt>き</rt></ruby>める<ruby>力<rt>ちから</rt></ruby>。<ruby>日本<rt>にほん</rt></ruby>ではこれが<ruby>国民<rt>こくみん</rt></ruby>にあるよ！',ng:'ちがう！<ruby>主権<rt>しゅけん</rt></ruby>とは<ruby>国<rt>くに</rt></ruby>の<ruby>中心<rt>ちゅうしん</rt></ruby>になって<ruby>物事<rt>ものごと</rt></ruby>を<ruby>決<rt>き</rt></ruby>める<ruby>力<rt>ちから</rt></ruby>のことだよ。'},
+  {q:'<ruby>国<rt>くに</rt></ruby>のことを<ruby>決<rt>き</rt></ruby>める<ruby>主権<rt>しゅけん</rt></ruby>はだれにある？',opts:['<ruby>天皇<rt>てんのう</rt></ruby>','<ruby>総理大臣<rt>そうりだいじん</rt></ruby>','<ruby>国民<rt>こくみん</rt></ruby>','<ruby>最高裁判所<rt>さいこうさいばんしょ</rt></ruby>'],ans:2,ok:'正解！「<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>にある」これが<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>だよ！',ng:'ちがう！<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>では<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>にあるよ。'},
+  {q:'<ruby>国民<rt>こくみん</rt></ruby>が<ruby>政治<rt>せいじ</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>するための<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>権利<rt>けんり</rt></ruby>は？',opts:['<ruby>旅行<rt>りょこう</rt></ruby>する<ruby>権利<rt>けんり</rt></ruby>','<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>投票<rt>とうひょう</rt></ruby>する<ruby>権利<rt>けんり</rt></ruby>','<ruby>学校<rt>がっこう</rt></ruby>に<ruby>行<rt>い</rt></ruby>く<ruby>権利<rt>けんり</rt></ruby>','<ruby>働<rt>はたら</rt></ruby>く<ruby>権利<rt>けんり</rt></ruby>'],ans:1,ok:'正解！<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>投票<rt>とうひょう</rt></ruby>することが<ruby>政治<rt>せいじ</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>手段<rt>しゅだん</rt></ruby>（第15条）！',ng:'ちがう！<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>投票<rt>とうひょう</rt></ruby>することが<ruby>政治<rt>せいじ</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>手段<rt>しゅだん</rt></ruby>だよ（第15条）。'},
+  {q:'<ruby>国会議員<rt>こっかいぎいん</rt></ruby>はどうやって<ruby>選<rt>えら</rt></ruby>ばれる？',opts:['<ruby>試験<rt>しけん</rt></ruby>に<ruby>合格<rt>ごうかく</rt></ruby>して','<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>ぶ','<ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>指名<rt>しめい</rt></ruby>する','くじ<ruby>引<rt>び</rt></ruby>きで<ruby>決<rt>き</rt></ruby>める'],ans:1,ok:'正解！<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>国会議員<rt>こっかいぎいん</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶ。これが<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>のしくみだよ！',ng:'ちがう！<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>ぶよ。'},
+  {q:'<ruby>憲法<rt>けんぽう</rt></ruby>第99条で<ruby>憲法<rt>けんぽう</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る<ruby>義務<rt>ぎむ</rt></ruby>が<ruby>定<rt>さだ</rt></ruby>められているのはだれ？',opts:['<ruby>小学生<rt>しょうがくせい</rt></ruby>','<ruby>天皇<rt>てんのう</rt></ruby>・<ruby>大臣<rt>だいじん</rt></ruby>・<ruby>国会議員<rt>こっかいぎいん</rt></ruby>など','<ruby>外国人<rt>がいこくじん</rt></ruby>','<ruby>会社員<rt>かいしゃいん</rt></ruby>'],ans:1,ok:'正解！<ruby>天皇<rt>てんのう</rt></ruby>・<ruby>大臣<rt>だいじん</rt></ruby>・<ruby>国会議員<rt>こっかいぎいん</rt></ruby>・<ruby>裁判官<rt>さいばんかん</rt></ruby>などが<ruby>憲法<rt>けんぽう</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る<ruby>義務<rt>ぎむ</rt></ruby>を<ruby>持<rt>も</rt></ruby>っているよ（第99条）！',ng:'ちがう！<ruby>天皇<rt>てんのう</rt></ruby>・<ruby>大臣<rt>だいじん</rt></ruby>・<ruby>国会議員<rt>こっかいぎいん</rt></ruby>などが<ruby>特<rt>とく</rt></ruby>に<ruby>定<rt>さだ</rt></ruby>められているよ（第99条）。'},
+  {q:'<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>とはどういうしくみ？',opts:['<ruby>力<rt>ちから</rt></ruby>の<ruby>強<rt>つよ</rt></ruby>い<ruby>人<rt>ひと</rt></ruby>が<ruby>決<rt>き</rt></ruby>めるしくみ','<ruby>国民<rt>こくみん</rt></ruby>みんなの<ruby>意見<rt>いけん</rt></ruby>が<ruby>政治<rt>せいじ</rt></ruby>に<ruby>反映<rt>はんえい</rt></ruby>されるしくみ','<ruby>専門家<rt>せんもんか</rt></ruby>だけが<ruby>決<rt>き</rt></ruby>めるしくみ','<ruby>お金持<rt>かねも</rt></ruby>ちが<ruby>決<rt>き</rt></ruby>めるしくみ'],ans:1,ok:'正解！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>みんなの<ruby>意見<rt>いけん</rt></ruby>が<ruby>政治<rt>せいじ</rt></ruby>に<ruby>反映<rt>はんえい</rt></ruby>されるしくみだよ！',ng:'ちがう！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>みんなの<ruby>意見<rt>いけん</rt></ruby>を<ruby>政治<rt>せいじ</rt></ruby>に<ruby>反映<rt>はんえい</rt></ruby>させるしくみだよ。'}
+ ],
+ battle:{
+  sprite:'👺',enemyName:'ドクサイの<ruby>先兵<rt>せんぺい</rt></ruby>',
+  bg:'linear-gradient(180deg,#8ecfff 0%,#bce0ff 35%,#c8e8a0 62%,#a8d878 75%,#8a6838 88%,#7a5828 100%)',
+  fights:[
+   {scene:'「<ruby>選挙<rt>せんきょ</rt></ruby>は<ruby>面倒<rt>めんどう</rt></ruby>！<ruby>専門家<rt>せんもんか</rt></ruby>が<ruby>全部<rt>ぜんぶ</rt></ruby><ruby>決<rt>き</rt></ruby>めればいい！」<ruby>正<rt>ただ</rt></ruby>しいのは？',eline:'<ruby>国民<rt>こくみん</rt></ruby>など<ruby>政治<rt>せいじ</rt></ruby>がわからない！',choices:[{t:'🤴 <ruby>専門家<rt>せんもんか</rt></ruby>に<ruby>任<rt>まか</rt></ruby>せる',c:false},{t:'🗳️ <ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>代表者<rt>だいひょうしゃ</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶ',c:true}],law:'第15条・<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>選挙<rt>せんきょ</rt></ruby>が<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>の<ruby>基本<rt>きほん</rt></ruby>！',ng:'<ruby>一部<rt>いちぶ</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>だけが<ruby>決<rt>き</rt></ruby>めることは<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>に<ruby>反<rt>はん</rt></ruby>する！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>権力者<rt>けんりょくしゃ</rt></ruby>が<ruby>憲法<rt>けんぽう</rt></ruby>を<ruby>無視<rt>むし</rt></ruby>して<ruby>好<rt>す</rt></ruby>き<ruby>勝手<rt>かって</rt></ruby>にやっている！」どうする？',eline:'<ruby>憲法<rt>けんぽう</rt></ruby>など<ruby>私<rt>わたし</rt></ruby>には<ruby>関係<rt>かんけい</rt></ruby>ない！',choices:[{t:'😶 <ruby>権力者<rt>けんりょくしゃ</rt></ruby>に<ruby>逆<rt>さか</rt></ruby>らえない',c:false},{t:'⚖️ 「<ruby>憲法<rt>けんぽう</rt></ruby>は<ruby>権力者<rt>けんりょくしゃ</rt></ruby>が<ruby>守<rt>まも</rt></ruby>らなければならないルール！」と<ruby>訴<rt>うった</rt></ruby>える',c:true}],law:'第99条',ok:'正解！<ruby>憲法<rt>けんぽう</rt></ruby>は<ruby>権力者<rt>けんりょくしゃ</rt></ruby>が<ruby>守<rt>まも</rt></ruby>らなければならないルール！国民の権利を守るためだよ！',ng:'<ruby>大臣<rt>だいじん</rt></ruby>や<ruby>国会議員<rt>こっかいぎいん</rt></ruby>などは<ruby>憲法<rt>けんぽう</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る<ruby>義務<rt>ぎむ</rt></ruby>がある（第99条）。<ruby>諦<rt>あきら</rt></ruby>めてはいけない！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>国民<rt>こくみん</rt></ruby>の<ruby>投票率<rt>とうひょうりつ</rt></ruby>が<ruby>低<rt>ひく</rt></ruby>いから<ruby>選挙<rt>せんきょ</rt></ruby>はいらない！」どう<ruby>答<rt>こた</rt></ruby>える？',eline:'どうせ<ruby>誰<rt>だれ</rt></ruby>も<ruby>投票<rt>とうひょう</rt></ruby>しない！',choices:[{t:'🚫 <ruby>投票率<rt>とうひょうりつ</rt></ruby>が<ruby>低<rt>ひく</rt></ruby>いなら<ruby>選挙<rt>せんきょ</rt></ruby>を<ruby>廃止<rt>はいし</rt></ruby>すればよい',c:false},{t:'🗳️ <ruby>投票<rt>とうひょう</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>権利<rt>けんり</rt></ruby>！もっと<ruby>参加<rt>さんか</rt></ruby>しやすくすることが<ruby>大切<rt>たいせつ</rt></ruby>',c:true}],law:'第15条',ok:'正解！<ruby>選挙<rt>せんきょ</rt></ruby>・<ruby>投票<rt>とうひょう</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>権利<rt>けんり</rt></ruby>（第15条）。<ruby>参加<rt>さんか</rt></ruby>しやすい<ruby>環境<rt>かんきょう</rt></ruby>にすることが<ruby>大切<rt>たいせつ</rt></ruby>！',ng:'<ruby>投票<rt>とうひょう</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>権利<rt>けんり</rt></ruby>（第15条）。<ruby>廃止<rt>はいし</rt></ruby>ではなく<ruby>参加<rt>さんか</rt></ruby>をふやすことが<ruby>大切<rt>たいせつ</rt></ruby>だよ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'<ruby>投票<rt>とうひょう</rt></ruby>で<ruby>負<rt>ま</rt></ruby>けた<ruby>政治家<rt>せいじか</rt></ruby>が「<ruby>結果<rt>けっか</rt></ruby>を<ruby>無効<rt>むこう</rt></ruby>にしろ！」',eline:'<ruby>選挙<rt>せんきょ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>など<ruby>認<rt>みと</rt></ruby>めない！',choices:[{t:'🤴 <ruby>権力者<rt>けんりょくしゃ</rt></ruby>の<ruby>言<rt>い</rt></ruby>うことに<ruby>従<rt>したが</rt></ruby>って<ruby>結果<rt>けっか</rt></ruby>を<ruby>取<rt>と</rt></ruby>り<ruby>消<rt>け</rt></ruby>す',c:false},{t:'✅ <ruby>選挙<rt>せんきょ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>意思<rt>いし</rt></ruby>！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>のルールで<ruby>尊重<rt>そんちょう</rt></ruby>されるべきだ',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>選挙<rt>せんきょ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>意思<rt>いし</rt></ruby>！',ng:'<ruby>選挙<rt>せんきょ</rt></ruby>の<ruby>結果<rt>けっか</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>意思<rt>いし</rt></ruby>。<ruby>無視<rt>むし</rt></ruby>は<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>への<ruby>侵害<rt>しんがい</rt></ruby>だよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'🤝【<ruby>協力<rt>きょうりょく</rt></ruby>バトル！】<ruby>二人<rt>ふたり</rt></ruby>で<ruby>同<rt>おな</rt></ruby>じ<ruby>答<rt>こた</rt></ruby>えを<ruby>選<rt>えら</rt></ruby>ぶと<ruby>必殺技<rt>ひっさつわざ</rt></ruby>発動！「<ruby>憲法<rt>けんぽう</rt></ruby>は<ruby>何<rt>なに</rt></ruby>のためにある？」',eline:'<ruby>二人<rt>ふたり</rt></ruby>がかりでも<ruby>倒<rt>たお</rt></ruby>せまい！',coop:true,coopEnemy:'🛡️👿',choices:[{t:'A: <ruby>国<rt>くに</rt></ruby>を<ruby>豊<rt>ゆた</rt></ruby>かにするため',c:false},{t:'B: <ruby>権力者<rt>けんりょくしゃ</rt></ruby>を<ruby>縛<rt>しば</rt></ruby>り<ruby>国民<rt>こくみん</rt></ruby>の<ruby>権利<rt>けんり</rt></ruby>を<ruby>守<rt>まも</rt></ruby>るため',c:true}],law:'第11条・第99条',ok:'✨<ruby>必殺技<rt>ひっさつわざ</rt></ruby>「<ruby>主権<rt>しゅけん</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」<ruby>発動<rt>はつどう</rt></ruby>！<ruby>二人<rt>ふたり</rt></ruby>の<ruby>心<rt>こころ</rt></ruby>がひとつに！',ng:'<ruby>答<rt>こた</rt></ruby>えが<ruby>違<rt>ちが</rt></ruby>う！<ruby>必殺技<rt>ひっさつわざ</rt></ruby>が<ruby>出<rt>だ</rt></ruby>せなかった…<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>ってもう<ruby>一度<rt>いちど</rt></ruby>！',dmg:40,pdmg:20,exp:35,gold:18},
+   {scene:'「<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>より<ruby>独裁<rt>どくさい</rt></ruby>の<ruby>方<rt>ほう</rt></ruby>が<ruby>速<rt>はや</rt></ruby>く<ruby>決<rt>き</rt></ruby>まる！」どう<ruby>反論<rt>はんろん</rt></ruby>する？',eline:'<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いは<ruby>時間<rt>じかん</rt></ruby>の<ruby>無駄<rt>むだ</rt></ruby>だ！',choices:[{t:'👊 <ruby>力<rt>ちから</rt></ruby>のある<ruby>一人<rt>ひとり</rt></ruby>が<ruby>決<rt>き</rt></ruby>めれば<ruby>速<rt>はや</rt></ruby>くてよい',c:false},{t:'💬 <ruby>時間<rt>じかん</rt></ruby>がかかってもみんなで<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>い、<ruby>国民<rt>こくみん</rt></ruby>の<ruby>意見<rt>いけん</rt></ruby>を<ruby>反映<rt>はんえい</rt></ruby>することが<ruby>大切<rt>たいせつ</rt></ruby>',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>は<ruby>時間<rt>じかん</rt></ruby>がかかっても<ruby>国民<rt>こくみん</rt></ruby>みんなの<ruby>意見<rt>いけん</rt></ruby>を<ruby>政治<rt>せいじ</rt></ruby>に<ruby>反映<rt>はんえい</rt></ruby>させるしくみだよ！',ng:'<ruby>国民<rt>こくみん</rt></ruby>全員の<ruby>意見<rt>いけん</rt></ruby>を<ruby>政治<rt>せいじ</rt></ruby>に<ruby>反映<rt>はんえい</rt></ruby>させることが<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>点<rt>てん</rt></ruby>だよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'「<ruby>国会<rt>こっかい</rt></ruby>の<ruby>議員<rt>ぎいん</rt></ruby>を<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選<rt>えら</rt></ruby>ぶ<ruby>必要<rt>ひつよう</rt></ruby>はない」<ruby>正<rt>ただ</rt></ruby>しいか？',eline:'<ruby>議員<rt>ぎいん</rt></ruby>など<ruby>私<rt>わたし</rt></ruby>が<ruby>決<rt>き</rt></ruby>める！',choices:[{t:'🤴 <ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>自分<rt>じぶん</rt></ruby>で<ruby>議員<rt>ぎいん</rt></ruby>を<ruby>選<rt>えら</rt></ruby>べばいい',c:false},{t:'🗳️ <ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>ぶことが<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>の<ruby>基本<rt>きほん</rt></ruby>',c:true}],law:'第15条・第43条',ok:'正解！<ruby>国会議員<rt>こっかいぎいん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>の<ruby>代表者<rt>だいひょうしゃ</rt></ruby>！',ng:'ちがう！<ruby>国会議員<rt>こっかいぎいん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>ぶよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'【<ruby>最終決戦<rt>さいしゅうけっせん</rt></ruby>！】<ruby>魔王<rt>まおう</rt></ruby>「ドクサイ」が<ruby>姿<rt>すがた</rt></ruby>を<ruby>現<rt>あらわ</rt></ruby>した！「<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>私<rt>わたし</rt></ruby>のもの！<ruby>国民<rt>こくみん</rt></ruby>は<ruby>従<rt>したが</rt></ruby>え！」',eline:'<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>私<rt>わたし</rt></ruby>が<ruby>持<rt>も</rt></ruby>つ！<ruby>憲法<rt>けんぽう</rt></ruby>など<ruby>書<rt>か</rt></ruby>き<ruby>換<rt>か</rt></ruby>えてやる！',choices:[{t:'😰 「<ruby>主権<rt>しゅけん</rt></ruby>を<ruby>渡<rt>わた</rt></ruby>します」と<ruby>屈服<rt>くっぷく</rt></ruby>する',c:false},{t:'⚜️ 「<ruby>主権在民<rt>しゅけんざいみん</rt></ruby>！<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>の<ruby>精神<rt>せいしん</rt></ruby>で<ruby>戦<rt>たたか</rt></ruby>う！」',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>・第1条',ok:'✨<ruby>必殺<rt>ひっさつ</rt></ruby>「<ruby>主権<rt>しゅけん</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」！ドクサイ<ruby>撃破<rt>げきは</rt></ruby>！！',ng:'<ruby>諦<rt>あきら</rt></ruby>めるな！「<ruby>主権<rt>しゅけん</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>に<ruby>存<rt>そん</rt></ruby>する」<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>を<ruby>思<rt>おも</rt></ruby>い<ruby>出<rt>だ</rt></ruby>せ！',dmg:60,pdmg:25,exp:50,gold:40,isBoss:true},
+  ],
+  reward:'👑 <ruby>主権<rt>しゅけん</rt></ruby>のバッジ',principle:'国民主権',
+  summary:'<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>と第15条が<ruby>示<rt>しめ</rt></ruby>す「<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>」。<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>代表者<rt>だいひょうしゃ</rt></ruby>を<ruby>選<rt>えら</rt></ruby>ぶことが<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>の<ruby>基本<rt>きほん</rt></ruby>です。',
+ },
+},
+{id:1,icon:'🌸',
+ name:'<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>の<ruby>尊重<rt>そんちょう</rt></ruby>',plainName:'基本的人権の尊重',
+ tagline:'<ruby>生<rt>う</rt></ruby>まれながらの「<ruby>自分<rt>じぶん</rt></ruby>らしく<ruby>生<rt>い</rt></ruby>きる<ruby>権利<rt>けんり</rt></ruby>」！',
+ learn:{
+  intro:'<ruby>人間<rt>にんげん</rt></ruby>は<ruby>生<rt>う</rt></ruby>まれた<ruby>瞬間<rt>しゅんかん</rt></ruby>から、<ruby>自分<rt>じぶん</rt></ruby>らしく<ruby>生<rt>い</rt></ruby>きる<ruby>権利<rt>けんり</rt></ruby>を<ruby>持<rt>も</rt></ruby>っている。これが「<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>」。だれにも<ruby>奪<rt>うば</rt></ruby>えないよ！',
+  points:[
+   {c:'p-red',i:'🗣️',t:'<b><ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>（第21条）</b>：<ruby>自分<rt>じぶん</rt></ruby>の<ruby>考<rt>かんが</rt></ruby>えや<ruby>意見<rt>いけん</rt></ruby>を<ruby>自由<rt>じゆう</rt></ruby>に<ruby>言<rt>い</rt></ruby>える<ruby>権利<rt>けんり</rt></ruby>。<ruby>政府<rt>せいふ</rt></ruby>への<ruby>批判<rt>ひはん</rt></ruby>もOK！'},
+   {c:'p-blue',i:'📰',t:'<b><ruby>報道<rt>ほうどう</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>（第21条）</b>：<ruby>新聞<rt>しんぶん</rt></ruby>やニュースが<ruby>事実<rt>じじつ</rt></ruby>を<ruby>自由<rt>じゆう</rt></ruby>に<ruby>伝<rt>つた</rt></ruby>える<ruby>権利<rt>けんり</rt></ruby>。'},
+   {c:'p-green',i:'🎓',t:'<b><ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>（第26条）</b>：すべての<ruby>子<rt>こ</rt></ruby>どもが<ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>けられる<ruby>権利<rt>けんり</rt></ruby>。<ruby>義務教育<rt>ぎむきょういく</rt></ruby>は<ruby>無償<rt>むしょう</rt></ruby>！'},
+   {c:'p-purple',i:'⚖️',t:'<b><ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>（第14条）</b>：<ruby>性別<rt>せいべつ</rt></ruby>・<ruby>人種<rt>じんしゅ</rt></ruby>などによる<ruby>差別<rt>さべつ</rt></ruby>は<ruby>禁<rt>きん</rt></ruby>じられているよ。'},
+  ],
+  lalalalaws:['第11条（<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>）','第14条（<ruby>平等<rt>びょうどう</rt></ruby>）','第21条（<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>）','第25条（<ruby>生存権<rt>せいぞんけん</rt></ruby>）','第26条（<ruby>教育<rt>きょういく</rt></ruby>）'],
+  summary:'<b><ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>は<ruby>生<rt>う</rt></ruby>まれたときから<ruby>誰<rt>だれ</rt></ruby>でも<ruby>持<rt>も</rt></ruby>っている</b>。<ruby>憲法<rt>けんぽう</rt></ruby>でしっかり<ruby>守<rt>まも</rt></ruby>られているよ！',
+ },
+ ws:[
+  {q:'<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>はいつから<ruby>持<rt>も</rt></ruby>っている？',opts:['20<ruby>歳<rt>さい</rt></ruby>になったら','<ruby>学校<rt>がっこう</rt></ruby>に<ruby>入<rt>はい</rt></ruby>ったら','<ruby>生<rt>う</rt></ruby>まれたときから','<ruby>働<rt>はたら</rt></ruby>き<ruby>始<rt>はじ</rt></ruby>めたら'],ans:2,ok:'正解！<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>は<ruby>生<rt>う</rt></ruby>まれたときから<ruby>持<rt>も</rt></ruby>っているよ（第11条）！',ng:'ちがう！<ruby>生<rt>う</rt></ruby>まれたときから<ruby>持<rt>も</rt></ruby>っているよ（第11条）。'},
+  {q:'「<ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>」は<ruby>何条<rt>なんじょう</rt></ruby>？',opts:['第9条','第11条','第14条','第25条'],ans:2,ok:'正解！第14条「<ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>」！',ng:'ちがう！第14条だよ。'},
+  {q:'<ruby>意見<rt>いけん</rt></ruby>を<ruby>自由<rt>じゆう</rt></ruby>に<ruby>発表<rt>はっぴょう</rt></ruby>できる<ruby>権利<rt>けんり</rt></ruby>を<ruby>何<rt>なん</rt></ruby>という？',opts:['<ruby>生存権<rt>せいぞんけん</rt></ruby>','<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>','<ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>','<ruby>選挙権<rt>せんきょけん</rt></ruby>'],ans:1,ok:'正解！第21条の「<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>」！',ng:'ちがう！「<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>」（第21条）だよ。'},
+  {q:'「<ruby>健康<rt>けんこう</rt></ruby>で<ruby>文化的<rt>ぶんかてき</rt></ruby>な<ruby>最低限<rt>さいていげん</rt></ruby>の<ruby>生活<rt>せいかつ</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る<ruby>権利<rt>けんり</rt></ruby>」を<ruby>何<rt>なん</rt></ruby>という？',opts:['<ruby>教育権<rt>きょういくけん</rt></ruby>','<ruby>選挙権<rt>せんきょけん</rt></ruby>','<ruby>生存権<rt>せいぞんけん</rt></ruby>','<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>'],ans:2,ok:'正解！第25条の「<ruby>生存権<rt>せいぞんけん</rt></ruby>」！',ng:'ちがう！第25条の「<ruby>生存権<rt>せいぞんけん</rt></ruby>」だよ。'},
+  {q:'<ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>は<ruby>何条<rt>なんじょう</rt></ruby>？',opts:['第21条','第25条','第26条','第31条'],ans:2,ok:'正解！第26条！<ruby>義務教育<rt>ぎむきょういく</rt></ruby>は<ruby>無償<rt>むしょう</rt></ruby>だよ！',ng:'ちがう！第26条だよ。'},
+  {q:'<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>は<ruby>政府<rt>せいふ</rt></ruby>が<ruby>与<rt>あた</rt></ruby>えるもの？',opts:['はい、<ruby>政府<rt>せいふ</rt></ruby>が<ruby>与<rt>あた</rt></ruby>える','いいえ、<ruby>生<rt>う</rt></ruby>まれながらに<ruby>持<rt>も</rt></ruby>つ<ruby>権利<rt>けんり</rt></ruby>','<ruby>大人<rt>おとな</rt></ruby>だけが<ruby>持<rt>も</rt></ruby>てる','お<ruby>金持<rt>かねも</rt></ruby>ちだけが<ruby>持<rt>も</rt></ruby>てる'],ans:1,ok:'正解！<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>は<ruby>生<rt>う</rt></ruby>まれながらに<ruby>持<rt>も</rt></ruby>ち、<ruby>誰<rt>だれ</rt></ruby>にも<ruby>侵<rt>おか</rt></ruby>せないものだよ（第11条）！',ng:'ちがう！<ruby>生<rt>う</rt></ruby>まれながらに<ruby>持<rt>も</rt></ruby>つ<ruby>権利<rt>けんり</rt></ruby>だよ（第11条）。'},
+  {q:'<ruby>人種<rt>じんしゅ</rt></ruby>を<ruby>理由<rt>りゆう</rt></ruby>に<ruby>仕事<rt>しごと</rt></ruby>を<ruby>断<rt>ことわ</rt></ruby>られた。これは？',opts:['<ruby>問題<rt>もんだい</rt></ruby>ない','第14条に<ruby>違反<rt>いはん</rt></ruby>する<ruby>差別<rt>さべつ</rt></ruby>','<ruby>会社<rt>かいしゃ</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>','<ruby>仕方<rt>しかた</rt></ruby>がない'],ans:1,ok:'正解！第14条「<ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>」に<ruby>違反<rt>いはん</rt></ruby>するよ！',ng:'ちがう！第14条に<ruby>違反<rt>いはん</rt></ruby>する<ruby>差別<rt>さべつ</rt></ruby>だよ。'},
+  {q:'<ruby>社会保障<rt>しゃかいほしょう</rt></ruby>（<ruby>年金<rt>ねんきん</rt></ruby>・<ruby>医療<rt>いりょう</rt></ruby>など）の<ruby>根拠<rt>こんきょ</rt></ruby>となる<ruby>条文<rt>じょうぶん</rt></ruby>は？',opts:['第9条','第14条','第21条','第25条'],ans:3,ok:'正解！第25条の<ruby>生存権<rt>せいぞんけん</rt></ruby>が<ruby>根拠<rt>こんきょ</rt></ruby>だよ！',ng:'ちがう！第25条の<ruby>生存権<rt>せいぞんけん</rt></ruby>だよ。'}
+ ],
+ battle:{
+  sprite:'🧟',enemyName:'<ruby>言論弾圧<rt>げんろんだんあつ</rt></ruby>の<ruby>魔神<rt>まじん</rt></ruby>クロゼル',
+  bg:'linear-gradient(180deg,#5a3a6a 0%,#7a4a9a 30%,#4a3060 60%,#2a1a40 100%)',
+  fights:[
+   {scene:'「<ruby>政府<rt>せいふ</rt></ruby>への<ruby>批判<rt>ひはん</rt></ruby>SNSを<ruby>全部<rt>ぜんぶ</rt></ruby><ruby>削除<rt>さくじょ</rt></ruby>し<ruby>逮捕<rt>たいほ</rt></ruby>せよ！」<ruby>正<rt>ただ</rt></ruby>しい<ruby>対応<rt>たいおう</rt></ruby>は？',eline:'<ruby>反対意見<rt>はんたいいけん</rt></ruby>など<ruby>存在<rt>そんざい</rt></ruby>してはならぬ！',choices:[{t:'🚫 <ruby>逮捕<rt>たいほ</rt></ruby>・<ruby>削除<rt>さくじょ</rt></ruby>を<ruby>命<rt>めい</rt></ruby>じる',c:false},{t:'🗣️ <ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る（第21条）',c:true}],law:'第21条',ok:'正解！<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>！<ruby>政府<rt>せいふ</rt></ruby>への<ruby>批判<rt>ひはん</rt></ruby>も<ruby>権利<rt>けんり</rt></ruby>だ！',ng:'<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>は第21条で<ruby>守<rt>まも</rt></ruby>られている！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>政府<rt>せいふ</rt></ruby>に<ruby>都合<rt>つごう</rt></ruby>の<ruby>悪<rt>わる</rt></ruby>い<ruby>新聞社<rt>しんぶんしゃ</rt></ruby>を<ruby>廃刊<rt>はいかん</rt></ruby>にしよう！」どうする？',eline:'<ruby>真実<rt>しんじつ</rt></ruby>など<ruby>邪魔<rt>じゃま</rt></ruby>だ！<ruby>報道<rt>ほうどう</rt></ruby>は<ruby>禁止<rt>きんし</rt></ruby>！',choices:[{t:'📰 <ruby>報道<rt>ほうどう</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る',c:true},{t:'🚫 <ruby>命令<rt>めいれい</rt></ruby>に<ruby>従<rt>したが</rt></ruby>い<ruby>廃刊<rt>はいかん</rt></ruby>にする',c:false}],law:'第21条',ok:'正解！<ruby>報道<rt>ほうどう</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>も第21条だよ！',ng:'<ruby>報道<rt>ほうどう</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>を<ruby>侵<rt>おか</rt></ruby>すと<ruby>国民<rt>こくみん</rt></ruby>が<ruby>真実<rt>しんじつ</rt></ruby>を<ruby>知<rt>し</rt></ruby>る<ruby>権利<rt>けんり</rt></ruby>が<ruby>奪<rt>うば</rt></ruby>われる！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>子<rt>こ</rt></ruby>どもは<ruby>学校<rt>がっこう</rt></ruby>に<ruby>行<rt>い</rt></ruby>かなくていい！<ruby>働<rt>はたら</rt></ruby>け！」<ruby>正<rt>ただ</rt></ruby>しい<ruby>反論<rt>はんろん</rt></ruby>は？',eline:'<ruby>教育<rt>きょういく</rt></ruby>などムダだ！',choices:[{t:'📜 <ruby>法律<rt>ほうりつ</rt></ruby>で<ruby>禁止<rt>きんし</rt></ruby>されていなければ<ruby>働<rt>はたら</rt></ruby>かせてもよい',c:false},{t:'🎓 <ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>けることはすべての<ruby>子<rt>こ</rt></ruby>どもの<ruby>権利<rt>けんり</rt></ruby>！（第26条）',c:true}],law:'第26条',ok:'正解！<ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>は第26条！',ng:'ちがう！すべての<ruby>子<rt>こ</rt></ruby>どもが<ruby>教育<rt>きょういく</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>を<ruby>持<rt>も</rt></ruby>っているよ（第26条）。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'<ruby>宗教<rt>しゅうきょう</rt></ruby>の<ruby>違<rt>ちが</rt></ruby>いで<ruby>差別<rt>さべつ</rt></ruby>された<ruby>人<rt>ひと</rt></ruby>がいる。<ruby>憲法<rt>けんぽう</rt></ruby>的にどう？',eline:'<ruby>宗教<rt>しゅうきょう</rt></ruby>が<ruby>違<rt>ちが</rt></ruby>う<ruby>者<rt>もの</rt></ruby>は<ruby>差別<rt>さべつ</rt></ruby>してよい！',choices:[{t:'🗣️ <ruby>本人<rt>ほんにん</rt></ruby>が<ruby>悪<rt>わる</rt></ruby>い<ruby>宗教<rt>しゅうきょう</rt></ruby>を<ruby>信<rt>しん</rt></ruby>じているのだから<ruby>差別<rt>さべつ</rt></ruby>は<ruby>当然<rt>とうぜん</rt></ruby>だ',c:false},{t:'🚫 <ruby>信教<rt>しんきょう</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>で<ruby>守<rt>まも</rt></ruby>られており<ruby>差別<rt>さべつ</rt></ruby>は<ruby>違憲<rt>いけん</rt></ruby>！（第14・20条）',c:true}],law:'第14条・第20条',ok:'正解！<ruby>差別<rt>さべつ</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>で<ruby>禁<rt>きん</rt></ruby>じられているよ！',ng:'ちがう！<ruby>差別<rt>さべつ</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>第14条・20条で<ruby>禁<rt>きん</rt></ruby>じられているよ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'🤝【<ruby>協力<rt>きょうりょく</rt></ruby>バトル！】「<ruby>お金<rt>おかね</rt></ruby>がない<ruby>人<rt>ひと</rt></ruby>は<ruby>生<rt>い</rt></ruby>きる<ruby>必要<rt>ひつよう</rt></ruby>がない」<ruby>二人<rt>ふたり</rt></ruby>で<ruby>同<rt>おな</rt></ruby>じ<ruby>答<rt>こた</rt></ruby>えを！',eline:'<ruby>弱者<rt>じゃくしゃ</rt></ruby>など<ruby>不要<rt>ふよう</rt></ruby>だ！',coop:true,coopEnemy:'💀🧟',choices:[{t:'A: <ruby>お金<rt>おかね</rt></ruby>のある<ruby>人<rt>ひと</rt></ruby>だけ<ruby>生<rt>い</rt></ruby>きる<ruby>権利<rt>けんり</rt></ruby>がある',c:false},{t:'B: <ruby>誰<rt>だれ</rt></ruby>でも<ruby>健康<rt>けんこう</rt></ruby>で<ruby>文化的<rt>ぶんかてき</rt></ruby>な<ruby>生活<rt>せいかつ</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る<ruby>権利<rt>けんり</rt></ruby>がある（第25条）',c:true}],law:'第25条（<ruby>生存権<rt>せいぞんけん</rt></ruby>）',ok:'✨<ruby>必殺技<rt>ひっさつわざ</rt></ruby>「<ruby>人権<rt>じんけん</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」！<ruby>二人<rt>ふたり</rt></ruby>の<ruby>力<rt>ちから</rt></ruby>が<ruby>合<rt>あ</rt></ruby>わさった！',ng:'<ruby>二人<rt>ふたり</rt></ruby>の<ruby>答<rt>こた</rt></ruby>えが<ruby>違<rt>ちが</rt></ruby>う…<ruby>生存権<rt>せいぞんけん</rt></ruby>（第25条）を<ruby>思<rt>おも</rt></ruby>い<ruby>出<rt>だ</rt></ruby>してもう<ruby>一度<rt>いちど</rt></ruby>！',dmg:40,pdmg:20,exp:35,gold:18},
+   {scene:'「<ruby>女性<rt>じょせい</rt></ruby>は<ruby>男性<rt>だんせい</rt></ruby>より<ruby>偉<rt>えら</rt></ruby>くないから<ruby>同<rt>おな</rt></ruby>じ<ruby>給料<rt>きゅうりょう</rt></ruby>を<ruby>払<rt>はら</rt></ruby>わなくていい」どう<ruby>答<rt>こた</rt></ruby>える？',eline:'<ruby>差別<rt>さべつ</rt></ruby>は<ruby>当然<rt>とうぜん</rt></ruby>だ！',choices:[{t:'💼 <ruby>仕事<rt>しごと</rt></ruby>の<ruby>種類<rt>しゅるい</rt></ruby>によって<ruby>給料<rt>きゅうりょう</rt></ruby>が<ruby>違<rt>ちが</rt></ruby>うのは<ruby>仕方<rt>しかた</rt></ruby>ない',c:false},{t:'⚖️ 第14条「<ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>」！<ruby>性別<rt>せいべつ</rt></ruby>だけを<ruby>理由<rt>りゆう</rt></ruby>にした<ruby>差別<rt>さべつ</rt></ruby>は<ruby>違憲<rt>いけん</rt></ruby>！',c:true}],law:'第14条',ok:'正解！「<ruby>法<rt>ほう</rt></ruby>の<ruby>下<rt>もと</rt></ruby>の<ruby>平等<rt>びょうどう</rt></ruby>」第14条！',ng:'ちがう！第14条で<ruby>性別<rt>せいべつ</rt></ruby>による<ruby>差別<rt>さべつ</rt></ruby>は<ruby>禁<rt>きん</rt></ruby>じられているよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'「<ruby>罪<rt>つみ</rt></ruby>を<ruby>犯<rt>おか</rt></ruby>した<ruby>人<rt>ひと</rt></ruby>は<ruby>裁判<rt>さいばん</rt></ruby>なしで<ruby>刑務所<rt>けいむしょ</rt></ruby>に<ruby>入<rt>い</rt></ruby>れていい！」どう？',eline:'<ruby>疑<rt>うたが</rt></ruby>わしい<ruby>者<rt>もの</rt></ruby>はすぐ<ruby>牢屋<rt>ろうや</rt></ruby>へ！',choices:[{t:'🔒 <ruby>疑<rt>うたが</rt></ruby>わしい<ruby>人<rt>ひと</rt></ruby>はすぐ<ruby>閉<rt>と</rt></ruby>じ<ruby>込<rt>こ</rt></ruby>める<ruby>方<rt>ほう</rt></ruby>が<ruby>社会<rt>しゃかい</rt></ruby>の<ruby>安全<rt>あんぜん</rt></ruby>のためになる',c:false},{t:'⚖️ だれでも<ruby>正式<rt>せいしき</rt></ruby>な<ruby>裁判<rt>さいばん</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>がある（第31・37条）',c:true}],law:'第31条・第37条',ok:'正解！<ruby>適正<rt>てきせい</rt></ruby>な<ruby>手続<rt>てつづ</rt></ruby>きと<ruby>公正<rt>こうせい</rt></ruby>な<ruby>裁判<rt>さいばん</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>があるよ！',ng:'ちがう！<ruby>裁判<rt>さいばん</rt></ruby>を<ruby>受<rt>う</rt></ruby>ける<ruby>権利<rt>けんり</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>で<ruby>守<rt>まも</rt></ruby>られているよ（第37条）。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'【<ruby>最終決戦<rt>さいしゅうけっせん</rt></ruby>！】<ruby>魔神<rt>まじん</rt></ruby>クロゼル<ruby>最終形態<rt>さいしゅうけいたい</rt></ruby>！「<ruby>全員<rt>ぜんいん</rt></ruby><ruby>黙<rt>だま</rt></ruby>らせてやる！<ruby>自由<rt>じゆう</rt></ruby>など<ruby>不要<rt>ふよう</rt></ruby>だ！」',eline:'<ruby>言葉<rt>ことば</rt></ruby>を<ruby>奪<rt>うば</rt></ruby>えば<ruby>支配<rt>しはい</rt></ruby>できる！',choices:[{t:'🤐 「<ruby>平和<rt>へいわ</rt></ruby>のため<ruby>黙<rt>だま</rt></ruby>ろう」と<ruby>同調<rt>どうちょう</rt></ruby>する',c:false},{t:'📣 「第21条！<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>が<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る！」',c:true}],law:'第21条',ok:'✨<ruby>必殺<rt>ひっさつ</rt></ruby>「<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>矢<rt>や</rt></ruby>」！クロゼル<ruby>撃破<rt>げきは</rt></ruby>！',ng:'<ruby>自由<rt>じゆう</rt></ruby>な<ruby>表現<rt>ひょうげん</rt></ruby>なしに<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>は<ruby>成<rt>な</rt></ruby>り<ruby>立<rt>た</rt></ruby>たない。第21条を<ruby>思<rt>おも</rt></ruby>い<ruby>出<rt>だ</rt></ruby>せ！',dmg:60,pdmg:25,exp:50,gold:40,isBoss:true},
+  {q:'<ruby>人権<rt>じんけん</rt></ruby>が<ruby>守<rt>まも</rt></ruby>られていない<ruby>例<rt>れい</rt></ruby>はどれ？',opts:['<ruby>学校<rt>がっこう</rt></ruby>の<ruby>授業<rt>じゅぎょう</rt></ruby>を<ruby>受<rt>う</rt></ruby>けている','<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>投票<rt>とうひょう</rt></ruby>している','<ruby>人種<rt>じんしゅ</rt></ruby>を<ruby>理由<rt>りゆう</rt></ruby>に<ruby>仕事<rt>しごと</rt></ruby>を<ruby>断<rt>ことわ</rt></ruby>られた','<ruby>自分<rt>じぶん</rt></ruby>の<ruby>意見<rt>いけん</rt></ruby>を<ruby>発表<rt>はっぴょう</rt></ruby>している'],ans:2,ok:'正解！<ruby>人種<rt>じんしゅ</rt></ruby>を<ruby>理由<rt>りゆう</rt></ruby>にした<ruby>差別<rt>さべつ</rt></ruby>は第14条に<ruby>違反<rt>いはん</rt></ruby>するよ！',ng:'ちがう！<ruby>人種<rt>じんしゅ</rt></ruby>を<ruby>理由<rt>りゆう</rt></ruby>に<ruby>仕事<rt>しごと</rt></ruby>を<ruby>断<rt>ことわ</rt></ruby>るのは第14条に<ruby>違反<rt>いはん</rt></ruby>するよ。'},
+  {q:'<ruby>国<rt>くに</rt></ruby>が<ruby>社会保障<rt>しゃかいほしょう</rt></ruby>の<ruby>制度<rt>せいど</rt></ruby>をつくる<ruby>根拠<rt>こんきょ</rt></ruby>となる<ruby>条文<rt>じょうぶん</rt></ruby>は？',opts:['第9条','第14条','第21条','第25条'],ans:3,ok:'正解！第25条の<ruby>生存権<rt>せいぞんけん</rt></ruby>が<ruby>根拠<rt>こんきょ</rt></ruby>！',ng:'ちがう！<ruby>社会保障<rt>しゃかいほしょう</rt></ruby>の<ruby>根拠<rt>こんきょ</rt></ruby>は第25条の<ruby>生存権<rt>せいぞんけん</rt></ruby>だよ。'},
+  ],
+  reward:'🌸 <ruby>人権<rt>じんけん</rt></ruby>のバッジ',principle:'基本的人権の尊重',
+  summary:'第21条「<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>」や第25条「<ruby>生存権<rt>せいぞんけん</rt></ruby>」など、<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>でしっかり<ruby>守<rt>まも</rt></ruby>られています。',
+ },
+},
+{id:2,icon:'🕊️',
+ name:'<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>',plainName:'平和主義',
+ tagline:'<ruby>戦争<rt>せんそう</rt></ruby>しない！<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いで<ruby>解決<rt>かいけつ</rt></ruby>！',
+ learn:{
+  intro:'<ruby>第2次世界大戦<rt>だいにじせかいたいせん</rt></ruby>での<ruby>反省<rt>はんせい</rt></ruby>から、<ruby>日本<rt>にほん</rt></ruby>は<ruby>憲法<rt>けんぽう</rt></ruby>に「もう<ruby>戦争<rt>せんそう</rt></ruby>はしない」と<ruby>書<rt>か</rt></ruby>いたんだ！',
+  points:[
+   {c:'p-blue',i:'🕊️',t:'<b><ruby>戦争<rt>せんそう</rt></ruby>の<ruby>放棄<rt>ほうき</rt></ruby>（第9条）</b>：<ruby>戦争<rt>せんそう</rt></ruby>をしない、<ruby>武力<rt>ぶりょく</rt></ruby>で<ruby>問題<rt>もんだい</rt></ruby>を<ruby>解決<rt>かいけつ</rt></ruby>しないことを<ruby>世界<rt>せかい</rt></ruby>に<ruby>約束<rt>やくそく</rt></ruby>したよ。'},
+   {c:'p-green',i:'🌏',t:'<b><ruby>外交<rt>がいこう</rt></ruby>と<ruby>対話<rt>たいわ</rt></ruby></b>：<ruby>問題<rt>もんだい</rt></ruby>が<ruby>起<rt>お</rt></ruby>きたら<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いや<ruby>国連<rt>こくれん</rt></ruby>で<ruby>平和的<rt>へいわてき</rt></ruby>に<ruby>解決<rt>かいけつ</rt></ruby>するのが<ruby>日本<rt>にほん</rt></ruby>のやり<ruby>方<rt>かた</rt></ruby>。'},
+   {c:'p-gold',i:'🛡️',t:'<ruby>戦争<rt>せんそう</rt></ruby>できなくても<b><ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>・<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby></b>で<ruby>世界<rt>せかい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>に<ruby>貢献<rt>こうけん</rt></ruby>できるよ！'},
+  ],
+  lalalalaws:['<ruby>憲法<rt>けんぽう</rt></ruby> <ruby>前文<rt>ぜんぶん</rt></ruby>','第9条（<ruby>戦争<rt>せんそう</rt></ruby>の<ruby>放棄<rt>ほうき</rt></ruby>）'],
+  summary:'<b>第9条は<ruby>世界<rt>せかい</rt></ruby>に<ruby>誇<rt>ほこ</rt></ruby>れる<ruby>日本<rt>にほん</rt></ruby>の<ruby>宝<rt>たから</rt></ruby></b>。<ruby>武力<rt>ぶりょく</rt></ruby>ではなく<ruby>対話<rt>たいわ</rt></ruby>と<ruby>外交<rt>がいこう</rt></ruby>で<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ることを<ruby>世界<rt>せかい</rt></ruby>に<ruby>誓<rt>ちか</rt></ruby>っているんだ！',
+ },
+ ws:[
+  {q:'第9条は<ruby>何<rt>なに</rt></ruby>を<ruby>定<rt>さだ</rt></ruby>めている？',opts:['<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>','<ruby>表現<rt>ひょうげん</rt></ruby>の<ruby>自由<rt>じゆう</rt></ruby>','<ruby>戦争<rt>せんそう</rt></ruby>の<ruby>放棄<rt>ほうき</rt></ruby>','<ruby>国会<rt>こっかい</rt></ruby>のしくみ'],ans:2,ok:'正解！第9条は<ruby>戦争<rt>せんそう</rt></ruby>を<ruby>放棄<rt>ほうき</rt></ruby>し<ruby>武力行使<rt>ぶりょくこうし</rt></ruby>を<ruby>禁<rt>きん</rt></ruby>じているよ！',ng:'ちがう！第9条は「<ruby>戦争<rt>せんそう</rt></ruby>の<ruby>放棄<rt>ほうき</rt></ruby>」を<ruby>定<rt>さだ</rt></ruby>めているよ。'},
+  {q:'<ruby>外国<rt>がいこく</rt></ruby>と<ruby>問題<rt>もんだい</rt></ruby>が<ruby>起<rt>お</rt></ruby>きたとき<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>の<ruby>解決方法<rt>かいけつほうほう</rt></ruby>は？',opts:['<ruby>軍隊<rt>ぐんたい</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る','<ruby>外交<rt>がいこう</rt></ruby>・<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いで<ruby>解決<rt>かいけつ</rt></ruby>','<ruby>無視<rt>むし</rt></ruby>する','<ruby>戦争<rt>せんそう</rt></ruby>する'],ans:1,ok:'正解！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>対話<rt>たいわ</rt></ruby>で<ruby>平和的<rt>へいわてき</rt></ruby>に<ruby>解決<rt>かいけつ</rt></ruby>することが<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>！',ng:'ちがう！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>対話<rt>たいわ</rt></ruby>で<ruby>解決<rt>かいけつ</rt></ruby>することが<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>だよ。'},
+  {q:'<ruby>日本<rt>にほん</rt></ruby>が<ruby>外国<rt>がいこく</rt></ruby>を<ruby>助<rt>たす</rt></ruby>けるとき<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>に<ruby>合<rt>あ</rt></ruby>うやり<ruby>方<rt>かた</rt></ruby>は？',opts:['<ruby>戦闘<rt>せんとう</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する','<ruby>何<rt>なに</rt></ruby>もしない','<ruby>食料<rt>しょくりょう</rt></ruby>・<ruby>医療<rt>いりょう</rt></ruby>の<ruby>支援<rt>しえん</rt></ruby>をする','<ruby>軍艦<rt>ぐんかん</rt></ruby>を<ruby>派遣<rt>はけん</rt></ruby>する'],ans:2,ok:'正解！<ruby>武力<rt>ぶりょく</rt></ruby>によらない<ruby>人道支援<rt>じんどうしえん</rt></ruby>が<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>の<ruby>実践<rt>じっせん</rt></ruby>！',ng:'ちがう！<ruby>食料<rt>しょくりょう</rt></ruby>・<ruby>医療<rt>いりょう</rt></ruby>などの<ruby>支援<rt>しえん</rt></ruby>が<ruby>憲法<rt>けんぽう</rt></ruby>の<ruby>精神<rt>せいしん</rt></ruby>に<ruby>合<rt>あ</rt></ruby>うよ。'},
+  {q:'<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>が<ruby>生<rt>う</rt></ruby>まれた<ruby>背景<rt>はいけい</rt></ruby>は？',opts:['<ruby>日本<rt>にほん</rt></ruby>が<ruby>戦争<rt>せんそう</rt></ruby>で<ruby>勝<rt>か</rt></ruby>ったから','<ruby>第2次世界大戦<rt>だいにじせかいたいせん</rt></ruby>の<ruby>深<rt>ふか</rt></ruby>い<ruby>反省<rt>はんせい</rt></ruby>から','<ruby>外国<rt>がいこく</rt></ruby>に<ruby>命令<rt>めいれい</rt></ruby>されたから','お<ruby>金<rt>かね</rt></ruby>の<ruby>節約<rt>せつやく</rt></ruby>のため'],ans:1,ok:'正解！<ruby>第2次世界大戦<rt>だいにじせかいたいせん</rt></ruby>の<ruby>深<rt>ふか</rt></ruby>い<ruby>反省<rt>はんせい</rt></ruby>から<ruby>生<rt>う</rt></ruby>まれたよ！',ng:'ちがう！<ruby>第2次世界大戦<rt>だいにじせかいたいせん</rt></ruby>の<ruby>反省<rt>はんせい</rt></ruby>からだよ。'},
+  {q:'「<ruby>平和<rt>へいわ</rt></ruby>のうちに<ruby>生存<rt>せいぞん</rt></ruby>する<ruby>権利<rt>けんり</rt></ruby>」は<ruby>憲法<rt>けんぽう</rt></ruby>のどこに<ruby>書<rt>か</rt></ruby>かれている？',opts:['第9条','第25条','<ruby>前文<rt>ぜんぶん</rt></ruby>','第41条'],ans:2,ok:'正解！<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>に<ruby>書<rt>か</rt></ruby>かれているよ！',ng:'ちがう！<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>だよ。'},
+  {q:'<ruby>国連<rt>こくれん</rt></ruby>（<ruby>国際連合<rt>こくさいれんごう</rt></ruby>）の<ruby>目的<rt>もくてき</rt></ruby>は？',opts:['<ruby>強<rt>つよ</rt></ruby>い<ruby>国<rt>くに</rt></ruby>が<ruby>世界<rt>せかい</rt></ruby>を<ruby>支配<rt>しはい</rt></ruby>する','<ruby>国際<rt>こくさい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>と<ruby>安全<rt>あんぜん</rt></ruby>を<ruby>守<rt>まも</rt></ruby>り<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby>をすすめる','<ruby>戦争<rt>せんそう</rt></ruby>を<ruby>積極的<rt>せっきょくてき</rt></ruby>に<ruby>行<rt>おこな</rt></ruby>う','<ruby>各国<rt>かっこく</rt></ruby>がバラバラに<ruby>動<rt>うご</rt></ruby>く'],ans:1,ok:'正解！<ruby>国連<rt>こくれん</rt></ruby>は<ruby>国際<rt>こくさい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>と<ruby>安全<rt>あんぜん</rt></ruby>を<ruby>守<rt>まも</rt></ruby>り<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby>を<ruby>進<rt>すす</rt></ruby>める<ruby>組織<rt>そしき</rt></ruby>だよ！',ng:'ちがう！<ruby>国際<rt>こくさい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>と<ruby>安全<rt>あんぜん</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ることが<ruby>目的<rt>もくてき</rt></ruby>だよ。'},
+  {q:'<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>の<ruby>関係<rt>かんけい</rt></ruby>は？',opts:['<ruby>平和<rt>へいわ</rt></ruby>のためなら<ruby>人権<rt>じんけん</rt></ruby>を<ruby>制限<rt>せいげん</rt></ruby>してよい','<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>','<ruby>人権<rt>じんけん</rt></ruby>より<ruby>平和<rt>へいわ</rt></ruby>が<ruby>優先<rt>ゆうせん</rt></ruby>','<ruby>関係<rt>かんけい</rt></ruby>がない'],ans:1,ok:'正解！<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>で<ruby>切<rt>き</rt></ruby>り<ruby>離<rt>はな</rt></ruby>せないよ！',ng:'ちがう！<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>だよ。'},
+  {q:'<ruby>日本<rt>にほん</rt></ruby>が<ruby>平和<rt>へいわ</rt></ruby>のために<ruby>国際社会<rt>こくさいしゃかい</rt></ruby>でできることは？',opts:['<ruby>戦闘<rt>せんとう</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する','<ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>・<ruby>技術協力<rt>ぎじゅつきょうりょく</rt></ruby>','<ruby>何<rt>なに</rt></ruby>もしない','<ruby>自国<rt>じこく</rt></ruby>のことだけ<ruby>考<rt>かんが</rt></ruby>える'],ans:1,ok:'正解！<ruby>武力<rt>ぶりょく</rt></ruby>によらない<ruby>国際貢献<rt>こくさいこうけん</rt></ruby>が<ruby>日本<rt>にほん</rt></ruby>の<ruby>役割<rt>やくわり</rt></ruby>だよ！',ng:'ちがう！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>などが<ruby>日本<rt>にほん</rt></ruby>にできる<ruby>国際貢献<rt>こくさいこうけん</rt></ruby>だよ。'}
+ ],
+ battle:{
+  sprite:'🐉',enemyName:'<ruby>武力神<rt>ぶりょくしん</rt></ruby>ガルダ',
+  bg:'linear-gradient(180deg,#2a4a2a 0%,#3a6a3a 30%,#1a3a1a 70%,#0a1a0a 100%)',
+  fights:[
+   {scene:'「<ruby>隣国<rt>りんごく</rt></ruby>とケンカになりそうだ！<ruby>先<rt>さき</rt></ruby>に<ruby>軍隊<rt>ぐんたい</rt></ruby>を<ruby>送<rt>おく</rt></ruby>れ！」どちらが<ruby>憲法<rt>けんぽう</rt></ruby>に<ruby>合<rt>あ</rt></ruby>う？',eline:'<ruby>先手必勝<rt>せんてひっしょう</rt></ruby>だ！<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いなど<ruby>無駄<rt>むだ</rt></ruby>！',choices:[{t:'⚔️ <ruby>先<rt>さき</rt></ruby>に<ruby>軍隊<rt>ぐんたい</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る',c:false},{t:'🕊️ <ruby>外交<rt>がいこう</rt></ruby>で<ruby>平和的<rt>へいわてき</rt></ruby>に<ruby>解決<rt>かいけつ</rt></ruby>する',c:true}],law:'第9条',ok:'正解！<ruby>対話<rt>たいわ</rt></ruby>と<ruby>外交<rt>がいこう</rt></ruby>が<ruby>日本<rt>にほん</rt></ruby>の<ruby>誓<rt>ちか</rt></ruby>いだ！',ng:'第9条は「<ruby>戦争<rt>せんそう</rt></ruby>の<ruby>放棄<rt>ほうき</rt></ruby>」。<ruby>武力<rt>ぶりょく</rt></ruby>を<ruby>先<rt>さき</rt></ruby>に<ruby>使<rt>つか</rt></ruby>うことは<ruby>違反<rt>いはん</rt></ruby>！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>同盟国<rt>どうめいこく</rt></ruby>が<ruby>戦争<rt>せんそう</rt></ruby>を<ruby>始<rt>はじ</rt></ruby>めた！<ruby>一緒<rt>いっしょ</rt></ruby>に<ruby>戦闘<rt>せんとう</rt></ruby>に<ruby>加<rt>くわ</rt></ruby>わるべきだ！」<ruby>正<rt>ただ</rt></ruby>しい<ruby>対応<rt>たいおう</rt></ruby>は？',eline:'<ruby>同盟国<rt>どうめいこく</rt></ruby>が<ruby>戦<rt>たたか</rt></ruby>っているのに！',choices:[{t:'⚔️ <ruby>共<rt>とも</rt></ruby>に<ruby>戦闘<rt>せんとう</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する',c:false},{t:'🛡️ <ruby>人道支援<rt>じんどうしえん</rt></ruby>・<ruby>難民支援<rt>なんみんしえん</rt></ruby>で<ruby>貢献<rt>こうけん</rt></ruby>する',c:true}],law:'第9条・<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>武力<rt>ぶりょく</rt></ruby>を<ruby>使<rt>つか</rt></ruby>わず<ruby>支援<rt>しえん</rt></ruby>で<ruby>貢献<rt>こうけん</rt></ruby>するのが<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>！',ng:'第9条は<ruby>武力行使<rt>ぶりょくこうし</rt></ruby>を<ruby>禁<rt>きん</rt></ruby>じている。<ruby>武力<rt>ぶりょく</rt></ruby>によらない<ruby>貢献<rt>こうけん</rt></ruby>こそ<ruby>日本<rt>にほん</rt></ruby>の<ruby>役割<rt>やくわり</rt></ruby>だ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>戦争<rt>せんそう</rt></ruby>できないなら<ruby>外国<rt>がいこく</rt></ruby>にやられ<ruby>放題<rt>ほうだい</rt></ruby>だ！<ruby>憲法<rt>けんぽう</rt></ruby>を<ruby>変<rt>か</rt></ruby>えよう！」どう<ruby>答<rt>こた</rt></ruby>える？',eline:'<ruby>戦力<rt>せんりょく</rt></ruby>がなければ<ruby>負<rt>ま</rt></ruby>けるだけだ！',choices:[{t:'🔫 <ruby>軍隊<rt>ぐんたい</rt></ruby>を<ruby>持<rt>も</rt></ruby>ち<ruby>力<rt>ちから</rt></ruby>で<ruby>安全<rt>あんぜん</rt></ruby>を<ruby>守<rt>まも</rt></ruby>るべきだ',c:false},{t:'🌏 <ruby>外交<rt>がいこう</rt></ruby>・<ruby>対話<rt>たいわ</rt></ruby>・<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby>で<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ることができる',c:true}],law:'第9条・<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby>で<ruby>平和<rt>へいわ</rt></ruby>は<ruby>守<rt>まも</rt></ruby>れる！',ng:'ちがう！<ruby>外交<rt>がいこう</rt></ruby>と<ruby>国際協力<rt>こくさいきょうりょく</rt></ruby>で<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ることが<ruby>日本<rt>にほん</rt></ruby>の<ruby>道<rt>みち</rt></ruby>だよ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'<ruby>近所<rt>きんじょ</rt></ruby>の<ruby>国<rt>くに</rt></ruby>との<ruby>島<rt>しま</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby>。「<ruby>軍艦<rt>ぐんかん</rt></ruby>を<ruby>送<rt>おく</rt></ruby>って<ruby>実力<rt>じつりょく</rt></ruby>で<ruby>取<rt>と</rt></ruby>り<ruby>返<rt>かえ</rt></ruby>そう」<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>に<ruby>合<rt>あ</rt></ruby>う<ruby>対応<rt>たいおう</rt></ruby>は？',eline:'<ruby>力<rt>ちから</rt></ruby>で<ruby>取<rt>と</rt></ruby>り<ruby>返<rt>かえ</rt></ruby>せ！',choices:[{t:'⚔️ <ruby>軍艦<rt>ぐんかん</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る',c:false},{t:'🏛️ <ruby>国際法<rt>こくさいほう</rt></ruby>や<ruby>対話<rt>たいわ</rt></ruby>で<ruby>平和的<rt>へいわてき</rt></ruby>に<ruby>解決<rt>かいけつ</rt></ruby>を<ruby>目指<rt>めざ</rt></ruby>す',c:true}],law:'第9条',ok:'正解！<ruby>対話<rt>たいわ</rt></ruby>と<ruby>国際法<rt>こくさいほう</rt></ruby>で<ruby>解決<rt>かいけつ</rt></ruby>を<ruby>目指<rt>めざ</rt></ruby>すのが<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>だ！',ng:'ちがう！<ruby>武力行使<rt>ぶりょくこうし</rt></ruby>は第9条に<ruby>反<rt>はん</rt></ruby>する。<ruby>対話<rt>たいわ</rt></ruby>と<ruby>国際法<rt>こくさいほう</rt></ruby>で<ruby>解決<rt>かいけつ</rt></ruby>を<ruby>目指<rt>めざ</rt></ruby>すよ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'🤝【<ruby>協力<rt>きょうりょく</rt></ruby>バトル！】「<ruby>戦争<rt>せんそう</rt></ruby>があっても<ruby>日本<rt>にほん</rt></ruby>は<ruby>知<rt>し</rt></ruby>らんぷりでいい！<ruby>助<rt>たす</rt></ruby>ける<ruby>必要<rt>ひつよう</rt></ruby>はない！」<ruby>二人<rt>ふたり</rt></ruby>で<ruby>同<rt>おな</rt></ruby>じ<ruby>答<rt>こた</rt></ruby>えを！',eline:'<ruby>外国<rt>がいこく</rt></ruby>のことなど<ruby>関係<rt>かんけい</rt></ruby>ない！',coop:true,coopEnemy:'🛡️🐉',choices:[{t:'A: <ruby>外国<rt>がいこく</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby>は<ruby>関係<rt>かんけい</rt></ruby>ないので<ruby>無視<rt>むし</rt></ruby>する',c:false},{t:'B: <ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>の<ruby>精神<rt>せいしん</rt></ruby>で<ruby>食料<rt>しょくりょう</rt></ruby>・<ruby>医療<rt>いりょう</rt></ruby>などの<ruby>支援<rt>しえん</rt></ruby>をする',c:true}],law:'<ruby>憲法<rt>けんぽう</rt></ruby><ruby>前文<rt>ぜんぶん</rt></ruby>・第9条',ok:'✨<ruby>必殺技<rt>ひっさつわざ</rt></ruby>「<ruby>平和<rt>へいわ</rt></ruby>の<ruby>盾<rt>たて</rt></ruby>」<ruby>発動<rt>はつどう</rt></ruby>！<ruby>日本<rt>にほん</rt></ruby>は<ruby>武力<rt>ぶりょく</rt></ruby>によらない<ruby>貢献<rt>こうけん</rt></ruby>で<ruby>世界<rt>せかい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>るよ！',ng:'<ruby>二人<rt>ふたり</rt></ruby>の<ruby>答<rt>こた</rt></ruby>えが<ruby>違<rt>ちが</rt></ruby>う…<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>は<ruby>世界<rt>せかい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>に<ruby>貢献<rt>こうけん</rt></ruby>することを<ruby>うたっているよ<rt></rt></ruby>！もう<ruby>一度<rt>いちど</rt></ruby>！',dmg:40,pdmg:20,exp:35,gold:18},
+   {scene:'<ruby>戦争<rt>せんそう</rt></ruby>で<ruby>被害<rt>ひがい</rt></ruby>を<ruby>受<rt>う</rt></ruby>けた<ruby>外国<rt>がいこく</rt></ruby>の<ruby>人<rt>ひと</rt></ruby>を<ruby>助<rt>たす</rt></ruby>けるためにできることは？',eline:'<ruby>外国<rt>がいこく</rt></ruby>のことなど<ruby>関係<rt>かんけい</rt></ruby>ない！',choices:[{t:'🚫 <ruby>関係<rt>かんけい</rt></ruby>ないので<ruby>何<rt>なに</rt></ruby>もしない',c:false},{t:'🏥 <ruby>医療<rt>いりょう</rt></ruby>・<ruby>食料<rt>しょくりょう</rt></ruby>・<ruby>復興支援<rt>ふっこうしえん</rt></ruby>を<ruby>送<rt>おく</rt></ruby>る',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>',ok:'正解！<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>の<ruby>前文<rt>ぜんぶん</rt></ruby>は「<ruby>世界<rt>せかい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>のために<ruby>努力<rt>どりょく</rt></ruby>する」と<ruby>宣言<rt>せんげん</rt></ruby>しているよ！',ng:'ちがう！<ruby>憲法前文<rt>けんぽうぜんぶん</rt></ruby>は<ruby>世界<rt>せかい</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>に<ruby>貢献<rt>こうけん</rt></ruby>することを<ruby>宣言<rt>せんげん</rt></ruby>しているよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'「<ruby>平和<rt>へいわ</rt></ruby>のためなら<ruby>少<rt>すこ</rt></ruby>しくらい<ruby>人権<rt>じんけん</rt></ruby>を<ruby>制限<rt>せいげん</rt></ruby>してもいい」<ruby>正<rt>ただ</rt></ruby>しいか？',eline:'<ruby>平和<rt>へいわ</rt></ruby>のためなら<ruby>何<rt>なに</rt></ruby>でもOKだ！',choices:[{t:'✂️ <ruby>平和<rt>へいわ</rt></ruby>のためなら<ruby>人権<rt>じんけん</rt></ruby>を<ruby>少<rt>すこ</rt></ruby>し<ruby>制限<rt>せいげん</rt></ruby>しても<ruby>構<rt>かま</rt></ruby>わない',c:false},{t:'🌸 <ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>は<ruby>両方<rt>りょうほう</rt></ruby>大切！どちらかを<ruby>犠牲<rt>ぎせい</rt></ruby>にしてはいけない',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>・第11条',ok:'正解！<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>は<ruby>両方<rt>りょうほう</rt></ruby>大切！これが<ruby>憲法<rt>けんぽう</rt></ruby>の<ruby>精神<rt>せいしん</rt></ruby>！',ng:'ちがう！<ruby>平和<rt>へいわ</rt></ruby>を<ruby>理由<rt>りゆう</rt></ruby>に<ruby>人権<rt>じんけん</rt></ruby>を<ruby>奪<rt>うば</rt></ruby>うことは<ruby>許<rt>ゆる</rt></ruby>されない。<ruby>両方<rt>りょうほう</rt></ruby>が<ruby>大切<rt>たいせつ</rt></ruby>だよ。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'【<ruby>最終決戦<rt>さいしゅうけっせん</rt></ruby>！】<ruby>武力神<rt>ぶりょくしん</rt></ruby>ガルダが<ruby>巨大化<rt>きょだいか</rt></ruby>！「<ruby>力<rt>ちから</rt></ruby>こそ<ruby>正義<rt>せいぎ</rt></ruby>！<ruby>戦争<rt>せんそう</rt></ruby>こそが<ruby>解決<rt>かいけつ</rt></ruby>だ！」',eline:'<ruby>力<rt>ちから</rt></ruby>こそ<ruby>正義<rt>せいぎ</rt></ruby>！<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いなど<ruby>無意味<rt>むいみ</rt></ruby>だ！',choices:[{t:'⚔️ 「<ruby>強<rt>つよ</rt></ruby>い<ruby>軍隊<rt>ぐんたい</rt></ruby>があれば<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>れる！」と<ruby>戦<rt>たたか</rt></ruby>いを<ruby>宣言<rt>せんげん</rt></ruby>する',c:false},{t:'🕊️ 「第9条！<ruby>平和<rt>へいわ</rt></ruby>を<ruby>世界<rt>せかい</rt></ruby>に<ruby>訴<rt>うった</rt></ruby>え<ruby>続<rt>つづ</rt></ruby>ける！」',c:true}],law:'<ruby>前文<rt>ぜんぶん</rt></ruby>・第9条',ok:'✨<ruby>必殺<rt>ひっさつ</rt></ruby>「<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」！ガルダ<ruby>撃破<rt>げきは</rt></ruby>！',ng:'<ruby>武力<rt>ぶりょく</rt></ruby>では<ruby>真<rt>しん</rt></ruby>の<ruby>平和<rt>へいわ</rt></ruby>は<ruby>来<rt>こ</rt></ruby>ない。第9条の<ruby>意味<rt>いみ</rt></ruby>を<ruby>思<rt>おも</rt></ruby>い<ruby>出<rt>だ</rt></ruby>せ！',dmg:60,pdmg:25,exp:50,gold:40,isBoss:true},
+  {q:'<ruby>日本<rt>にほん</rt></ruby>が<ruby>平和<rt>へいわ</rt></ruby>のために<ruby>国際社会<rt>こくさいしゃかい</rt></ruby>でできることはどれ？',opts:['<ruby>戦闘<rt>せんとう</rt></ruby>に<ruby>参加<rt>さんか</rt></ruby>する','<ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>・<ruby>技術協力<rt>ぎじゅつきょうりょく</rt></ruby>','<ruby>何<rt>なに</rt></ruby>もしない','<ruby>力<rt>ちから</rt></ruby>で<ruby>解決<rt>かいけつ</rt></ruby>する'],ans:1,ok:'正解！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>・<ruby>技術協力<rt>ぎじゅつきょうりょく</rt></ruby>などが<ruby>武力<rt>ぶりょく</rt></ruby>によらない<ruby>国際貢献<rt>こくさいこうけん</rt></ruby>だよ！',ng:'ちがう！<ruby>外交<rt>がいこう</rt></ruby>・<ruby>人道支援<rt>じんどうしえん</rt></ruby>などが<ruby>憲法<rt>けんぽう</rt></ruby>の<ruby>精神<rt>せいしん</rt></ruby>に<ruby>合<rt>あ</rt></ruby>う<ruby>方法<rt>ほうほう</rt></ruby>だよ。'},
+  {q:'<ruby>平和主義<rt>へいわしゅぎ</rt></ruby>と<ruby>基本的人権<rt>きほんてきじんけん</rt></ruby>の<ruby>関係<rt>かんけい</rt></ruby>は？',opts:['<ruby>平和<rt>へいわ</rt></ruby>のためなら<ruby>人権<rt>じんけん</rt></ruby>を<ruby>制限<rt>せいげん</rt></ruby>してよい','<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>','<ruby>人権<rt>じんけん</rt></ruby>より<ruby>平和<rt>へいわ</rt></ruby>が<ruby>優先<rt>ゆうせん</rt></ruby>','<ruby>関係<rt>かんけい</rt></ruby>がない'],ans:1,ok:'正解！<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>で<ruby>切<rt>き</rt></ruby>り<ruby>離<rt>はな</rt></ruby>せないよ！',ng:'ちがう！<ruby>平和<rt>へいわ</rt></ruby>と<ruby>人権<rt>じんけん</rt></ruby>はどちらも<ruby>大切<rt>たいせつ</rt></ruby>だよ。'},
+  ],
+  reward:'🕊️ <ruby>平和<rt>へいわ</rt></ruby>のバッジ',principle:'平和主義',
+  summary:'<ruby>日本国憲法<rt>にほんこくけんぽう</rt></ruby>第9条は<ruby>戦争<rt>せんそう</rt></ruby>を<ruby>放棄<rt>ほうき</rt></ruby>し<ruby>武力行使<rt>ぶりょくこうし</rt></ruby>を<ruby>禁<rt>きん</rt></ruby>じています。<ruby>対話<rt>たいわ</rt></ruby>と<ruby>外交<rt>がいこう</rt></ruby>で<ruby>平和<rt>へいわ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>ることが<ruby>日本<rt>にほん</rt></ruby>の<ruby>誓<rt>ちか</rt></ruby>いです。',
+ },
+},
+{id:3,icon:'🏛️',
+ name:'<ruby>国会<rt>こっかい</rt></ruby>の<ruby>仕組<rt>しく</rt></ruby>み',plainName:'国会の仕組み',
+ tagline:'<ruby>国<rt>くに</rt></ruby>のルールを<ruby>作<rt>つく</rt></ruby>る「<ruby>国会<rt>こっかい</rt></ruby>」ってなに？',
+ learn:{
+  intro:'<ruby>国会<rt>こっかい</rt></ruby>は、<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>んだ<ruby>国会議員<rt>こっかいぎいん</rt></ruby>が<ruby>集<rt>あつ</rt></ruby>まって<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>場所<rt>ばしょ</rt></ruby>だよ！',
+  points:[
+   {c:'p-blue',i:'🏛️',t:'<ruby>国会<rt>こっかい</rt></ruby>は<b><ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>の2つ</b>に<ruby>分<rt>わ</rt></ruby>かれている（<b><ruby>二院制<rt>にいんせい</rt></ruby></b>）。<ruby>二重<rt>にじゅう</rt></ruby>チェックでより<ruby>慎重<rt>しんちょう</rt></ruby>に<ruby>決<rt>き</rt></ruby>められるんだ。'},
+   {c:'p-green',i:'📋',t:'<ruby>国会<rt>こっかい</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>仕事<rt>しごと</rt></ruby>3つ：①<b><ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>る</b>　②<b><ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>める</b>　③<b><ruby>内閣総理大臣<rt>ないかくそうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>する</b>'},
+   {c:'p-gold',i:'⚖️',t:'<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>方<rt>ほう</rt></ruby>が<ruby>力<rt>ちから</rt></ruby>が<ruby>強<rt>つよ</rt></ruby>い（<b><ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby></b>）。<ruby>意見<rt>いけん</rt></ruby>が<ruby>分<rt>わ</rt></ruby>かれたとき<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>決定<rt>けってい</rt></ruby>が<ruby>優先<rt>ゆうせん</rt></ruby>されることが<ruby>多<rt>おお</rt></ruby>いよ。'},
+   {c:'p-purple',i:'🗳️',t:'<ruby>国会議員<rt>こっかいぎいん</rt></ruby>は<b>わたしたち<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>で<ruby>選<rt>えら</rt></ruby>ぶ</b>。<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>と<ruby>国会<rt>こっかい</rt></ruby>のつながりだね！'},
+  ],
+  lalalalaws:['第41条（<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>）','第59条（<ruby>法律<rt>ほうりつ</rt></ruby>の<ruby>成立<rt>せいりつ</rt></ruby>）','第67条（<ruby>総理大臣<rt>そうりだいじん</rt></ruby>の<ruby>指名<rt>しめい</rt></ruby>）'],
+  summary:'<b><ruby>国会<rt>こっかい</rt></ruby>は「<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>」</b>（第41条）。<ruby>衆議院<rt>しゅうぎいん</rt></ruby>＋<ruby>参議院<rt>さんぎいん</rt></ruby>の<ruby>二院制<rt>にいんせい</rt></ruby>で<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>り<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>するよ！',
+ },
+ ws:[
+  {q:'<ruby>国会<rt>こっかい</rt></ruby>は<ruby>何条<rt>なんじょう</rt></ruby>で「<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>」と<ruby>定<rt>さだ</rt></ruby>められている？',opts:['第9条','第21条','第41条','第86条'],ans:2,ok:'正解！第41条「<ruby>国会<rt>こっかい</rt></ruby>は<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>」！',ng:'ちがう！第41条だよ。'},
+  {q:'<ruby>国会<rt>こっかい</rt></ruby>はいくつの<ruby>院<rt>いん</rt></ruby>に<ruby>分<rt>わ</rt></ruby>かれている？',opts:['1つ','2つ（<ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>）','3つ','4つ'],ans:1,ok:'正解！<ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>の<ruby>二院制<rt>にいんせい</rt></ruby>！',ng:'ちがう！<ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>の2つだよ。'},
+  {q:'<ruby>国会<rt>こっかい</rt></ruby>の<ruby>大切<rt>たいせつ</rt></ruby>な<ruby>仕事<rt>しごと</rt></ruby>はどれ？',opts:['<ruby>裁判<rt>さいばん</rt></ruby>をする','<ruby>警察<rt>けいさつ</rt></ruby>を<ruby>指揮<rt>しき</rt></ruby>する','<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>り<ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>め<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>する','<ruby>外国<rt>がいこく</rt></ruby>と<ruby>交渉<rt>こうしょう</rt></ruby>する'],ans:2,ok:'正解！<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>り・<ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>め・<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>することが<ruby>国会<rt>こっかい</rt></ruby>の<ruby>主<rt>おも</rt></ruby>な<ruby>仕事<rt>しごと</rt></ruby>！',ng:'ちがう！<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>り・<ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>め・<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>することが<ruby>主<rt>おも</rt></ruby>な<ruby>仕事<rt>しごと</rt></ruby>だよ。'},
+  {q:'<ruby>内閣総理大臣<rt>ないかくそうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>するのはどこ？',opts:['<ruby>天皇<rt>てんのう</rt></ruby>','<ruby>国会<rt>こっかい</rt></ruby>','<ruby>最高裁判所<rt>さいこうさいばんしょ</rt></ruby>','<ruby>国民<rt>こくみん</rt></ruby>の<ruby>直接投票<rt>ちょくせつとうひょう</rt></ruby>'],ans:1,ok:'正解！<ruby>国会<rt>こっかい</rt></ruby>が<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>するよ（第67条）！',ng:'ちがう！<ruby>国会<rt>こっかい</rt></ruby>が<ruby>指名<rt>しめい</rt></ruby>するよ（第67条）。'},
+  {q:'<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>れるのはどこだけ？',opts:['<ruby>内閣<rt>ないかく</rt></ruby>','<ruby>国会<rt>こっかい</rt></ruby>','<ruby>都道府県<rt>とどうふけん</rt></ruby>','<ruby>裁判所<rt>さいばんしょ</rt></ruby>'],ans:1,ok:'正解！第41条「<ruby>国<rt>くに</rt></ruby>の<ruby>唯一<rt>ゆいいつ</rt></ruby>の<ruby>立法機関<rt>りっぽうきかん</rt></ruby>」。<ruby>国会<rt>こっかい</rt></ruby>だけが<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>れるよ！',ng:'ちがう！<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>れるのは<ruby>国会<rt>こっかい</rt></ruby>だけ（第41条）だよ。'},
+  {q:'<ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>で<ruby>意見<rt>いけん</rt></ruby>が<ruby>分<rt>わ</rt></ruby>かれたとき<ruby>優先<rt>ゆうせん</rt></ruby>されるのは？',opts:['<ruby>参議院<rt>さんぎいん</rt></ruby>の<ruby>決定<rt>けってい</rt></ruby>','<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>決定<rt>けってい</rt></ruby>','どちらも<ruby>同<rt>おな</rt></ruby>じ','<ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>決<rt>き</rt></ruby>める'],ans:1,ok:'正解！「<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby>」（第59条）！',ng:'ちがう！<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby>があるよ（第59条）。'},
+  {q:'<ruby>国<rt>くに</rt></ruby>の<ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>めるのはどこ？',opts:['<ruby>内閣<rt>ないかく</rt></ruby>が<ruby>自由<rt>じゆう</rt></ruby>に<ruby>決<rt>き</rt></ruby>める','<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>める','<ruby>天皇<rt>てんのう</rt></ruby>が<ruby>決<rt>き</rt></ruby>める','<ruby>国民<rt>こくみん</rt></ruby>が<ruby>直接<rt>ちょくせつ</rt></ruby><ruby>決<rt>き</rt></ruby>める'],ans:1,ok:'正解！<ruby>予算<rt>よさん</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>めるよ（第86条）！',ng:'ちがう！<ruby>予算<rt>よさん</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>めるよ（第86条）。'},
+  {q:'<ruby>法律<rt>ほうりつ</rt></ruby>が<ruby>憲法<rt>けんぽう</rt></ruby>に<ruby>違反<rt>いはん</rt></ruby>していないか<ruby>調<rt>しら</rt></ruby>べる（<ruby>違憲審査<rt>いけんしんさ</rt></ruby>）のはどこ？',opts:['<ruby>国会<rt>こっかい</rt></ruby>','<ruby>内閣<rt>ないかく</rt></ruby>','<ruby>裁判所<rt>さいばんしょ</rt></ruby>','<ruby>天皇<rt>てんのう</rt></ruby>'],ans:2,ok:'正解！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をする（第81条）。<ruby>三権分立<rt>さんけんぶんりつ</rt></ruby>のしくみだよ！',ng:'ちがう！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をするよ（第81条）。'}
+ ],
+ battle:{
+  sprite:'👾',enemyName:'<ruby>混乱<rt>こんらん</rt></ruby>の<ruby>魔将軍<rt>まじょうぐん</rt></ruby>カオシア',
+  bg:'linear-gradient(180deg,#1a1a3a 0%,#2a2a5a 30%,#3a3a6a 60%,#1a1a2a 100%)',
+  fights:[
+   {scene:'「<ruby>国会<rt>こっかい</rt></ruby>など<ruby>面倒<rt>めんどう</rt></ruby>！<ruby>法律<rt>ほうりつ</rt></ruby>は<ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>一人<rt>ひとり</rt></ruby>で<ruby>決<rt>き</rt></ruby>めればいい！」<ruby>正<rt>ただ</rt></ruby>しいのは？',eline:'<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>いなど<ruby>無駄<rt>むだ</rt></ruby>！',choices:[{t:'😈 <ruby>総理大臣<rt>そうりだいじん</rt></ruby><ruby>一人<rt>ひとり</rt></ruby>で<ruby>決<rt>き</rt></ruby>める',c:false},{t:'🏛️ <ruby>国会<rt>こっかい</rt></ruby>で<ruby>議員<rt>ぎいん</rt></ruby>みんなが<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>う',c:true}],law:'第41条',ok:'正解！第41条「<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>」！<ruby>法律<rt>ほうりつ</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>で<ruby>決<rt>き</rt></ruby>める！',ng:'ちがう！<ruby>法律<rt>ほうりつ</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>で<ruby>決<rt>き</rt></ruby>めるもの。<ruby>独断<rt>どくだん</rt></ruby>は<ruby>許<rt>ゆる</rt></ruby>されない！',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>国会議員<rt>こっかいぎいん</rt></ruby>など<ruby>不要<rt>ふよう</rt></ruby>！AIに<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>らせろ！」どう<ruby>答<rt>こた</rt></ruby>える？',eline:'<ruby>人間<rt>にんげん</rt></ruby>の<ruby>議員<rt>ぎいん</rt></ruby>など<ruby>不要<rt>ふよう</rt></ruby>だ！',choices:[{t:'🏢 <ruby>国民<rt>こくみん</rt></ruby>に<ruby>選<rt>えら</rt></ruby>ばれていない<ruby>専門家<rt>せんもんか</rt></ruby>が<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>ればよい',c:false},{t:'🗳️ <ruby>国民<rt>こくみん</rt></ruby>が<ruby>選<rt>えら</rt></ruby>んだ<ruby>代表<rt>だいひょう</rt></ruby>が<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>って<ruby>決<rt>き</rt></ruby>めることが<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>の<ruby>基本<rt>きほん</rt></ruby>（第41条）',c:true}],law:'第41条・第43条',ok:'正解！<ruby>国民<rt>こくみん</rt></ruby>の<ruby>代表者<rt>だいひょうしゃ</rt></ruby>が<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>って<ruby>決<rt>き</rt></ruby>めることが<ruby>大切<rt>たいせつ</rt></ruby>！',ng:'ちがう！<ruby>国民<rt>こくみん</rt></ruby>の<ruby>代表者<rt>だいひょうしゃ</rt></ruby>が<ruby>話<rt>はな</rt></ruby>し<ruby>合<rt>あ</rt></ruby>って<ruby>決<rt>き</rt></ruby>めることが<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>だよ。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'<ruby>衆議院<rt>しゅうぎいん</rt></ruby>が<ruby>賛成<rt>さんせい</rt></ruby>しても<ruby>参議院<rt>さんぎいん</rt></ruby>が<ruby>反対<rt>はんたい</rt></ruby>したら<ruby>法律<rt>ほうりつ</rt></ruby>は<ruby>作<rt>つく</rt></ruby>れない？',eline:'<ruby>二院制<rt>にいんせい</rt></ruby>など<ruby>意味<rt>いみ</rt></ruby>がない！',choices:[{t:'🚫 そうだ、<ruby>絶対<rt>ぜったい</rt></ruby>に<ruby>作<rt>つく</rt></ruby>れない',c:false},{t:'⚖️ <ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby>で<ruby>決<rt>き</rt></ruby>められることがある',c:true}],law:'第59条',ok:'正解！<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby>で<ruby>条件<rt>じょうけん</rt></ruby>次第<rt>しだい</rt></ruby>では<ruby>衆議院<rt>しゅうぎいん</rt></ruby>だけで<ruby>決<rt>き</rt></ruby>められるよ！',ng:'ちがう！<ruby>衆議院<rt>しゅうぎいん</rt></ruby>の<ruby>優越<rt>ゆうえつ</rt></ruby>があるよ（第59条）。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'「<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選<rt>えら</rt></ruby>んでいない<ruby>人<rt>ひと</rt></ruby>が<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>ってもいい！」<ruby>正<rt>ただ</rt></ruby>しいか？',eline:'<ruby>誰<rt>だれ</rt></ruby>が<ruby>作<rt>つく</rt></ruby>ってもいいだろう！',choices:[{t:'📋 <ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>るのは<ruby>誰<rt>だれ</rt></ruby>でもよい、<ruby>内容<rt>ないよう</rt></ruby>さえ<ruby>正<rt>ただ</rt></ruby>しければいい',c:false},{t:'🏛️ <ruby>法律<rt>ほうりつ</rt></ruby>は<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選<rt>えら</rt></ruby>んだ<ruby>代表<rt>だいひょう</rt></ruby>が<ruby>集<rt>あつ</rt></ruby>まる<ruby>国会<rt>こっかい</rt></ruby>だけが<ruby>作<rt>つく</rt></ruby>れる（第41条）',c:true}],law:'第41条',ok:'正解！<ruby>国会<rt>こっかい</rt></ruby>は「<ruby>唯一<rt>ゆいいつ</rt></ruby>の<ruby>立法機関<rt>りっぽうきかん</rt></ruby>」！',ng:'ちがう！<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>れるのは<ruby>国会<rt>こっかい</rt></ruby>だけだよ（第41条）。',dmg:25,pdmg:15,exp:20,gold:10},
+   {scene:'🤝【<ruby>協力<rt>きょうりょく</rt></ruby>バトル！】「<ruby>国会<rt>こっかい</rt></ruby>を<ruby>廃止<rt>はいし</rt></ruby>してしまえ！<ruby>法律<rt>ほうりつ</rt></ruby>もいらない！」<ruby>二人<rt>ふたり</rt></ruby>で<ruby>同<rt>おな</rt></ruby>じ<ruby>答<rt>こた</rt></ruby>えを！',eline:'<ruby>国会<rt>こっかい</rt></ruby>など<ruby>廃止<rt>はいし</rt></ruby>だ！',coop:true,coopEnemy:'💥👾',choices:[{t:'A: <ruby>国会<rt>こっかい</rt></ruby>は<ruby>面倒<rt>めんどう</rt></ruby>なので<ruby>廃止<rt>はいし</rt></ruby>する',c:false},{t:'B: 第41条！<ruby>国会<rt>こっかい</rt></ruby>は<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>に<ruby>欠<rt>か</rt></ruby>かせない<ruby>最高機関<rt>さいこうきかん</rt></ruby>！',c:true}],law:'第41条',ok:'✨<ruby>必殺技<rt>ひっさつわざ</rt></ruby>「<ruby>議会<rt>ぎかい</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」<ruby>発動<rt>はつどう</rt></ruby>！<ruby>二人<rt>ふたり</rt></ruby>の<ruby>力<rt>ちから</rt></ruby>が<ruby>合<rt>あ</rt></ruby>わさった！',ng:'<ruby>二人<rt>ふたり</rt></ruby>の<ruby>答<rt>こた</rt></ruby>えが<ruby>違<rt>ちが</rt></ruby>う…<ruby>国会<rt>こっかい</rt></ruby>の<ruby>役割<rt>やくわり</rt></ruby>を<ruby>確認<rt>かくにん</rt></ruby>してもう<ruby>一度<rt>いちど</rt></ruby>！',dmg:40,pdmg:20,exp:35,gold:18},
+   {scene:'「<ruby>税金<rt>ぜいきん</rt></ruby>の<ruby>使<rt>つか</rt></ruby>い<ruby>方<rt>かた</rt></ruby>は<ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>勝手<rt>かって</rt></ruby>に<ruby>決<rt>き</rt></ruby>めればいい！」どう<ruby>答<rt>こた</rt></ruby>える？',eline:'お<ruby>金<rt>かね</rt></ruby>は<ruby>私<rt>わたし</rt></ruby>が<ruby>使<rt>つか</rt></ruby>いたいように<ruby>使<rt>つか</rt></ruby>う！',choices:[{t:'💴 <ruby>税金<rt>ぜいきん</rt></ruby>の<ruby>使<rt>つか</rt></ruby>い<ruby>方<rt>かた</rt></ruby>は<ruby>総理大臣<rt>そうりだいじん</rt></ruby>が<ruby>自由<rt>じゆう</rt></ruby>に<ruby>決<rt>き</rt></ruby>めてよい',c:false},{t:'📊 <ruby>予算<rt>よさん</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>し<ruby>国民<rt>こくみん</rt></ruby>の<ruby>代表<rt>だいひょう</rt></ruby>が<ruby>決<rt>き</rt></ruby>める（第86条）',c:true}],law:'第86条',ok:'正解！<ruby>国<rt>くに</rt></ruby>のお<ruby>金<rt>かね</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>決<rt>き</rt></ruby>めるよ！',ng:'ちがう！<ruby>予算<rt>よさん</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>めるよ（第86条）。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'<ruby>国会<rt>こっかい</rt></ruby>で<ruby>決<rt>き</rt></ruby>めた<ruby>法律<rt>ほうりつ</rt></ruby>が<ruby>憲法<rt>けんぽう</rt></ruby>に<ruby>違反<rt>いはん</rt></ruby>していないか<ruby>調<rt>しら</rt></ruby>べるのはだれ？',eline:'<ruby>法律<rt>ほうりつ</rt></ruby>に<ruby>文句<rt>もんく</rt></ruby>をつけるな！',choices:[{t:'🏛️ <ruby>国会<rt>こっかい</rt></ruby>が<ruby>自分<rt>じぶん</rt></ruby>で<ruby>調<rt>しら</rt></ruby>べる',c:false},{t:'⚖️ <ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をする（第81条）',c:true}],law:'第81条',ok:'正解！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をする。<ruby>三権分立<rt>さんけんぶんりつ</rt></ruby>だ！',ng:'ちがう！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をするよ（第81条）。',dmg:25,pdmg:15,exp:22,gold:12},
+   {scene:'【<ruby>最終決戦<rt>さいしゅうけっせん</rt></ruby>！】カオシアが<ruby>巨大化<rt>きょだいか</rt></ruby>！「<ruby>国会<rt>こっかい</rt></ruby>を<ruby>廃止<rt>はいし</rt></ruby>！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>を<ruby>消<rt>け</rt></ruby>してやる！」',eline:'<ruby>国会<rt>こっかい</rt></ruby>など<ruby>廃止<rt>はいし</rt></ruby>だ！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>など<ruby>終<rt>お</rt></ruby>わりだ！',choices:[{t:'😈 「<ruby>国民<rt>こくみん</rt></ruby>が<ruby>選挙<rt>せんきょ</rt></ruby>などしなくても<ruby>私<rt>わたし</rt></ruby>が<ruby>すべて<rt></rt></ruby><ruby>決<rt>き</rt></ruby>める！」と<ruby>従<rt>したが</rt></ruby>う',c:false},{t:'🏛️ 「第41条！<ruby>国会<rt>こっかい</rt></ruby>は<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>！<ruby>民主主義<rt>みんしゅしゅぎ</rt></ruby>を<ruby>守<rt>まも</rt></ruby>る！」',c:true}],law:'第41条',ok:'✨<ruby>必殺<rt>ひっさつ</rt></ruby>「<ruby>議会<rt>ぎかい</rt></ruby>の<ruby>光<rt>ひかり</rt></ruby>」！カオシア<ruby>撃破<rt>げきは</rt></ruby>！！',ng:'<ruby>諦<rt>あきら</rt></ruby>めるな！<ruby>国会<rt>こっかい</rt></ruby>は<ruby>国民主権<rt>こくみんしゅけん</rt></ruby>を<ruby>実現<rt>じつげん</rt></ruby>するための<ruby>大切<rt>たいせつ</rt></ruby>なしくみだ！',dmg:60,pdmg:25,exp:50,gold:40,isBoss:true},
+  {q:'<ruby>国<rt>くに</rt></ruby>の<ruby>予算<rt>よさん</rt></ruby>を<ruby>決<rt>き</rt></ruby>めるのはどこ？',opts:['<ruby>内閣<rt>ないかく</rt></ruby>が<ruby>自由<rt>じゆう</rt></ruby>に<ruby>決<rt>き</rt></ruby>める','<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>める','<ruby>天皇<rt>てんのう</rt></ruby>が<ruby>決<rt>き</rt></ruby>める','<ruby>国民<rt>こくみん</rt></ruby>が<ruby>直接<rt>ちょくせつ</rt></ruby><ruby>決<rt>き</rt></ruby>める'],ans:1,ok:'正解！<ruby>国会<rt>こっかい</rt></ruby>が<ruby>予算<rt>よさん</rt></ruby>を<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>めるよ（第86条）！',ng:'ちがう！<ruby>予算<rt>よさん</rt></ruby>は<ruby>国会<rt>こっかい</rt></ruby>が<ruby>審議<rt>しんぎ</rt></ruby>して<ruby>決<rt>き</rt></ruby>めるよ（第86条）。'},
+  {q:'<ruby>法律<rt>ほうりつ</rt></ruby>が<ruby>憲法<rt>けんぽう</rt></ruby>に<ruby>違反<rt>いはん</rt></ruby>していないか<ruby>調<rt>しら</rt></ruby>べる（<ruby>違憲審査<rt>いけんしんさ</rt></ruby>）のはどこ？',opts:['<ruby>国会<rt>こっかい</rt></ruby>','<ruby>内閣<rt>ないかく</rt></ruby>','<ruby>裁判所<rt>さいばんしょ</rt></ruby>','<ruby>天皇<rt>てんのう</rt></ruby>'],ans:2,ok:'正解！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をする（第81条）。<ruby>三権分立<rt>さんけんぶんりつ</rt></ruby>のしくみだよ！',ng:'ちがう！<ruby>裁判所<rt>さいばんしょ</rt></ruby>が<ruby>違憲審査<rt>いけんしんさ</rt></ruby>をするよ（第81条）。'},
+  ],
+  reward:'🏛️ <ruby>議会<rt>ぎかい</rt></ruby>のバッジ',principle:'国会の仕組み',
+  summary:'<ruby>国会<rt>こっかい</rt></ruby>は<ruby>衆議院<rt>しゅうぎいん</rt></ruby>と<ruby>参議院<rt>さんぎいん</rt></ruby>の<ruby>二院制<rt>にいんせい</rt></ruby>で<ruby>法律<rt>ほうりつ</rt></ruby>を<ruby>作<rt>つく</rt></ruby>り<ruby>総理大臣<rt>そうりだいじん</rt></ruby>を<ruby>指名<rt>しめい</rt></ruby>する「<ruby>国権<rt>こっけん</rt></ruby>の<ruby>最高機関<rt>さいこうきかん</rt></ruby>」（第41条）です。',
+ },
+},
+];
+
+// ══════════════════════════════════════════════════════
+// FINAL TEST DATA (25問)
+// ══════════════════════════════════════════════════════
+var FINAL_TEST=[
+ // 国民主権 (Q1-7)
+ {n:1,tag:'tag-shuken',lbl:'国民主権',q:'日本国憲法で「主権」はだれにある？',opts:['天皇','総理大臣','国民','最高裁判所'],ans:2,ok:'正解！「主権は国民にある」これが国民主権！（憲法前文・第1条）',ng:'ちがう！「主権は国民にある」これが国民主権だよ。'},
+ {n:2,tag:'tag-shuken',lbl:'国民主権',q:'国民が政治に参加するための大切な手段は？',opts:['くじ引き','選挙','テスト','申込み'],ans:1,ok:'正解！選挙が民主主義の基本！（第15条）',ng:'ちがう！選挙で代表者を選ぶことが民主主義の基本だよ。'},
+ {n:3,tag:'tag-shuken',lbl:'国民主権',q:'憲法の第99条で、憲法を守る義務があると特に定められているのはだれ？',opts:['小学生','外国人','天皇・大臣・国会議員など','会社の社長'],ans:2,ok:'正解！天皇や大臣・国会議員・裁判官などが憲法を守る義務を持つと定められているよ（第99条）。国民みんなも憲法の精神を大切にすることが重要だよ！',ng:'ちがう！天皇・大臣・国会議員・裁判官などが憲法を守る義務を特に定められているよ（第99条）。'},
+ {n:4,tag:'tag-shuken',lbl:'国民主権',q:'「国民主権」が大切にしていることは何？',opts:['国を豊かにすること','国民全員が主権を持ち政治に参加できること','一番賢い人が決めること','外国に負けないこと'],ans:1,ok:'正解！国民主権では国民全員が主権を持ち、選挙などを通じて政治に参加できることが大切！',ng:'ちがう！国民主権では国民全員が主権を持ち選挙などを通じて政治に参加できることが大切だよ。'},
+ {n:5,tag:'tag-shuken',lbl:'国民主権',q:'選挙で負けた政治家が「結果を無効にしろ」と言った。これは？',opts:['正しい','おかしい','どちらでもよい','総理が決める'],ans:1,ok:'正解！選挙の結果は国民の意思。尊重されなければならない！',ng:'ちがう！選挙の結果は国民の意思であり尊重されるべきだよ。'},
+ {n:6,tag:'tag-shuken',lbl:'国民主権',q:'国会議員はどうやって選ばれる？',opts:['くじ引き','試験合格','国民が選挙で選ぶ','総理大臣が決める'],ans:2,ok:'正解！国民が選挙で選ぶ（第43条）！',ng:'ちがう！国民が選挙で選ぶよ（第43条）。'},
+ {n:7,tag:'tag-shuken',lbl:'国民主権',q:'民主主義で最も大切にされていることはどれ？',opts:['すばやく決めること','国民みんなの意見が政治に反映されること','一番強い人が決めること','お金持ちが決めること'],ans:1,ok:'正解！民主主義は国民みんなの意見を政治に反映させることを大切にするしくみだよ！',ng:'ちがう！民主主義は国民みんなの意見を政治に反映させることを大切にするしくみだよ。'},
+ // 基本的人権 (Q8-14)
+ {n:8,tag:'tag-jinken',lbl:'基本的人権',q:'基本的人権は何条で保障されている（主な条文）？',opts:['第1条','第9条','第11条','第41条'],ans:2,ok:'正解！第11条が基本的人権の保障を定めているよ！',ng:'ちがう！基本的人権の保障は第11条だよ。'},
+ {n:9,tag:'tag-jinken',lbl:'基本的人権',q:'自分の意見を自由に言える権利を何という？',opts:['生存権','表現の自由','教育の権利','選挙権'],ans:1,ok:'正解！第21条の「表現の自由」！',ng:'ちがう！意見を自由に言える権利は「表現の自由」（第21条）だよ。'},
+ {n:10,tag:'tag-jinken',lbl:'基本的人権',q:'「健康で文化的な最低限の生活を送る権利」を何という？',opts:['教育権','選挙権','生存権','表現の自由'],ans:2,ok:'正解！第25条の「生存権」！',ng:'ちがう！第25条の「生存権」だよ。'},
+ {n:11,tag:'tag-jinken',lbl:'基本的人権',q:'教育を受ける権利は何条？',opts:['第21条','第25条','第26条','第31条'],ans:2,ok:'正解！第26条！義務教育は無償だよ！',ng:'ちがう！教育を受ける権利は第26条だよ。'},
+ {n:12,tag:'tag-jinken',lbl:'基本的人権',q:'性別・人種などによる差別を禁じている条文は？',opts:['第9条','第14条','第21条','第41条'],ans:1,ok:'正解！第14条「法の下の平等」！',ng:'ちがう！差別を禁じているのは第14条「法の下の平等」だよ。'},
+ {n:13,tag:'tag-jinken',lbl:'基本的人権',q:'「政府に都合の悪い新聞を廃刊にする」これは憲法に違反する？',opts:['違反しない','違反する','場合による','条例で決める'],ans:1,ok:'正解！報道の自由（第21条）に違反する！',ng:'ちがう！報道の自由は第21条で守られているので違反するよ。'},
+ {n:14,tag:'tag-jinken',lbl:'基本的人権',q:'裁判なしに刑務所に入れることは憲法で認められる？',opts:['認められる','認められない','軽い罪ならOK','緊急時はOK'],ans:1,ok:'正解！第31条・第37条で適正な手続きと公正な裁判を受ける権利が守られている！',ng:'ちがう！第31条・37条で適正な手続きと裁判を受ける権利が守られているよ。'},
+ // 平和主義 (Q15-19)
+ {n:15,tag:'tag-heiwa',lbl:'平和主義',q:'日本国憲法第9条は何を定めている？',opts:['選挙のルール','戦争の放棄','国会のしくみ','人権の保障'],ans:1,ok:'正解！第9条は「戦争の放棄」！',ng:'ちがう！第9条は「戦争の放棄」を定めているよ。'},
+ {n:16,tag:'tag-heiwa',lbl:'平和主義',q:'外国と問題が起きたとき平和主義の解決方法は？',opts:['すぐ軍隊を送る','話し合い・外交で解決','無視する','核兵器で脅す'],ans:1,ok:'正解！話し合い・外交で平和的に解決するのが平和主義！',ng:'ちがう！話し合いや外交で平和的に解決することが平和主義だよ。'},
+ {n:17,tag:'tag-heiwa',lbl:'平和主義',q:'日本が戦争で困っている外国を助ける方法として平和主義に合うのは？',opts:['一緒に戦闘参加','核兵器を提供','医療・食料・復興支援','軍艦を派遣'],ans:2,ok:'正解！武力を使わない人道支援が平和主義の実践！',ng:'ちがう！武力を使わない医療・食料支援などが憲法の精神に合うよ。'},
+ {n:18,tag:'tag-heiwa',lbl:'平和主義',q:'日本が外国と仲良く平和を守るためにできることで、第9条の精神に合う方法はどれ？',opts:['先に軍隊で攻撃する','外交・対話・国際協力で信頼を築く','核兵器を持つ','他の国に任せて何もしない'],ans:1,ok:'正解！外交・対話・国際協力で信頼を築くことが第9条の精神に合うやり方だよ！',ng:'ちがう！外交・対話・国際協力で信頼を築くことが第9条の精神に合う方法だよ。'},
+ {n:19,tag:'tag-heiwa',lbl:'平和主義',q:'平和主義と基本的人権の関係は？',opts:['関係ない','平和のためなら人権を制限してもよい','平和と人権は両方大切','人権より平和が優先'],ans:2,ok:'正解！平和と人権は切り離せない。両方大切！',ng:'ちがう！平和と人権は両方大切で、どちらかのために他方を犠牲にしてはいけないよ。'},
+ // 国会の仕組み (Q20-25)
+ {n:20,tag:'tag-kokkai',lbl:'国会の仕組み',q:'国会は何条で「国権の最高機関」と定められている？',opts:['第9条','第15条','第41条','第86条'],ans:2,ok:'正解！第41条「国会は国権の最高機関」！',ng:'ちがう！第41条で「国会は国権の最高機関」と定められているよ。'},
+ {n:21,tag:'tag-kokkai',lbl:'国会の仕組み',q:'国会はどんな二つの院に分かれている？',opts:['上院と下院','衆議院と参議院','元老院と市民院','立法院と行政院'],ans:1,ok:'正解！衆議院と参議院の二院制！',ng:'ちがう！衆議院と参議院の二院制だよ。'},
+ {n:22,tag:'tag-kokkai',lbl:'国会の仕組み',q:'内閣総理大臣を指名するのはだれ？',opts:['天皇','国会','最高裁判所','国民投票'],ans:1,ok:'正解！国会が総理大臣を指名する（第67条）！',ng:'ちがう！総理大臣を指名するのは国会だよ（第67条）。'},
+ {n:23,tag:'tag-kokkai',lbl:'国会の仕組み',q:'衆議院と参議院で意見が分かれたとき優先されることが多いのは？',opts:['参議院の決定','衆議院の決定','どちらも同じ','総理大臣が決める'],ans:1,ok:'正解！「衆議院の優越」（第59条）！',ng:'ちがう！「衆議院の優越」があり衆議院の決定が優先されることが多いよ（第59条）。'},
+ {n:24,tag:'tag-kokkai',lbl:'国会の仕組み',q:'国の予算を審議して決めるのはどこ？',opts:['内閣','国会','裁判所','天皇'],ans:1,ok:'正解！予算は国会が審議して決める（第86条）！',ng:'ちがう！予算は国会が審議して決めるよ（第86条）。'},
+ {n:25,tag:'tag-kokkai',lbl:'国会の仕組み',q:'法律が憲法に違反していないか調べる（違憲審査）のはどこ？',opts:['国会','内閣','裁判所','天皇'],ans:2,ok:'正解！裁判所が違憲審査を行う（第81条）。三権分立のしくみだ！',ng:'ちがう！裁判所が違憲審査を行うよ（第81条）。'},
+];
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+var G={hp:100,maxHp:100,exp:0,expNext:100,level:1,gold:0,badges:[],
+       learnedIds:[],passedIds:[],clearedIds:[],
+       dIdx:null,qIdx:0,answered:false,wasOk:false,
+       wsIdx:null,wsAnswers:[],coopP1:null,coopP2:null};
+
+function syncHUD(){
+  document.getElementById('bHp').style.width=(G.hp/G.maxHp*100)+'%';
+  document.getElementById('bXp').style.width=(G.exp/G.expNext*100)+'%';
+  document.getElementById('vHp').textContent=G.hp+'/'+G.maxHp;
+  document.getElementById('vXp').textContent=G.exp+'/'+G.expNext;
+  document.getElementById('vLv').textContent='Lv.'+G.level;
+  document.getElementById('vGold').textContent='💰 '+G.gold+'G';
+  document.getElementById('badgeStrip').innerHTML=G.badges.map(function(b){return '<span class="badge-tag">'+b+'</span>';}).join('');
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+}
+function gotoWorld(){syncHUD();buildMap();showScreen('s-world');}
+
+// MAP
+function getStatus(id){
+  if(G.clearedIds.includes(id))return 'cleared';
+  if(G.passedIds.includes(id))return 'passed';
+  if(G.learnedIds.includes(id))return 'learned';
+  return 'lock';
+}
+function buildMap(){
+  var list=document.getElementById('principleList');list.innerHTML='';
+  PRINCIPLES.forEach(function(p){
+    var st=getStatus(p.id);
+    var slbl={lock:'🔒 未学習',learned:'📖 学習済み',passed:'✅ WS合格',cleared:'⭐ バトルクリア'}[st];
+    var scls='st-'+st;
+    var card=document.createElement('div');card.className='prin-card';
+    card.innerHTML='<div class="prin-header" onclick="toggleCard(this,'+p.id+')">'
+      +'<div class="prin-icon">'+p.icon+'</div>'
+      +'<div class="prin-texts"><div class="prin-name">'+p.name+'</div><div class="prin-tagline">'+p.tagline+'</div></div>'
+      +'<span class="prin-status '+scls+'">'+slbl+'</span>'
+      +'</div>'
+      +'<div class="prin-body" id="pb_'+p.id+'">'+buildPrinBody(p)+'</div>';
+    list.appendChild(card);
+  });
+}
+function toggleCard(hdr,id){
+  var card=hdr.parentElement;
+  document.querySelectorAll('.prin-card').forEach(function(c){if(c!==card)c.classList.remove('open');});
+  card.classList.toggle('open');
+}
+function buildPrinBody(p){
+  var st=getStatus(p.id);
+  var h='<div style="padding-top:10px">';
+  h+='<button class="btn-primary" style="margin-bottom:8px" onclick="openLearn('+p.id+')">📚 学習する →</button>';
+  if(st==='learned'||st==='passed'||st==='cleared')
+    h+='<button class="btn-primary" onclick="openWS('+p.id+')" style="margin-bottom:8px;background:linear-gradient(135deg,var(--green2),var(--green))">📝 ワークシートに挑戦！ →</button>';
+  if(st==='passed'||st==='cleared')
+    h+='<button class="btn-purple" onclick="enterBattle('+p.id+')">⚔️ バトルモードへ →</button>';
+  else if(st==='learned')
+    h+='<div class="locked-hint">📝 ワークシートに合格するとバトルが解放されるよ！</div>';
+  else
+    h+='<div class="locked-hint">📚 まず学習してからワークシートに挑戦しよう！</div>';
+  h+='</div>';
+  return h;
+}
+
+// LEARN
+function openLearn(id){
+  var p=PRINCIPLES[id],L=p.learn;
+  var h='<div class="learn-box">';
+  h+='<div class="learn-title">'+p.icon+' '+p.name+' を学ぼう</div>';
+  h+='<div class="learn-hero-box"><div class="learn-hero-face">🧙‍♂️</div>'
+    +'<div><div class="learn-hero-name">ケンポー博士</div><div class="learn-hero-text">'+L.intro+'</div></div></div>';
+  h+='<div class="learn-sec">📌 大切なポイント</div>';
+  h+='<div class="learn-points">';
+  L.points.forEach(function(pt){
+    h+='<div class="lp '+pt.c+'"><div class="lp-icon">'+pt.i+'</div><div class="lp-body">'+pt.t+'</div></div>';
+  });
+  h+='</div>';
+  h+='<div class="law-box"><span class="law-lbl">📜 条文：</span>';
+  L.laws.forEach(function(l){h+='<span class="law-tag">'+l+'</span>';});
+  h+='</div>';
+  h+='<div class="learn-summary">💡 まとめ：'+L.summary+'</div>';
+  h+='<button class="btn-primary" onclick="learnDone('+id+')" style="margin-top:14px">✅ 学習完了！ワークシートへ →</button>';
+  h+='</div>';
+  document.getElementById('learnContent').innerHTML=h;
+  showScreen('s-learn');
+}
+function learnDone(id){
+  if(!G.learnedIds.includes(id))G.learnedIds.push(id);
+  openWS(id);
+}
+
+// WS
+function openWS(id){
+  if(!G.learnedIds.includes(id))G.learnedIds.push(id);
+  G.wsIdx=id;G.wsAnswers=[];
+  var p=PRINCIPLES[id];var total=p.ws.length;
+  var pm=total>=5?Math.ceil(total*.8):total;
+  document.getElementById('wsBtnBack').onclick=function(){openLearn(id);};
+  var h='<div class="ws-title">📝 確認ワークシート：'+p.name+'</div>';
+  h+='<div class="ws-intro">'+total+'問中 '+pm+'問以上正解でバトル解放！</div>';
+  p.ws.forEach(function(q,qi){
+    h+='<div class="ws-q"><div class="ws-q-num">Q'+(qi+1)+'</div>';
+    h+='<div class="ws-q-text">'+q.q+'</div><div class="ws-opts">';
+    q.opts.forEach(function(opt,oi){h+='<button class="ws-opt" id="wo_'+qi+'_'+oi+'" onclick="answerWS('+qi+','+oi+')">'+opt+'</button>';});
+    h+='</div><div class="ws-feedback" id="wfb_'+qi+'"></div></div>';
+  });
+  h+='<div class="ws-result" id="wsRes"><div class="ws-score" id="wsScore"></div><div class="ws-msg" id="wsMsg"></div>'
+    +'<button class="btn-purple" id="wsBattle" style="display:none;margin-top:10px" onclick="enterBattle('+id+')">⚔️ バトルモードへ進む！</button>'
+    +'<button class="btn-retry" id="wsRetry" style="display:none" onclick="openWS('+id+')">🔄 もう一度チャレンジ</button></div>';
+  document.getElementById('wsContent').innerHTML=h;
+  showScreen('s-ws');
+}
+function answerWS(qi,oi){
+  if(G.wsAnswers[qi]!==undefined)return;
+  G.wsAnswers[qi]=oi;
+  var p=PRINCIPLES[G.wsIdx];var q=p.ws[qi];var ok=(oi===q.ans);
+  document.querySelectorAll('[id^="wo_'+qi+'_"]').forEach(function(b,i){b.classList.add('off');if(i===q.ans)b.classList.add('chosen-ok');});
+  if(!ok)document.getElementById('wo_'+qi+'_'+oi).classList.add('chosen-ng');
+  var fb=document.getElementById('wfb_'+qi);
+  fb.className='ws-feedback show '+(ok?'ok':'ng');
+  fb.innerHTML=ok?('⭕ '+q.ok):('❌ '+q.ng);
+  if(G.wsAnswers.filter(function(a){return a!==undefined;}).length===p.ws.length)showWSResult();
+}
+function showWSResult(){
+  var p=PRINCIPLES[G.wsIdx];var correct=0;
+  p.ws.forEach(function(q,i){if(G.wsAnswers[i]===q.ans)correct++;});
+  var total=p.ws.length;var pm=total>=5?Math.ceil(total*.8):total;
+  var passed=correct>=pm;
+  if(passed&&!G.passedIds.includes(G.wsIdx)){G.passedIds.push(G.wsIdx);G.exp+=20;checkLevelUp();syncHUD();}
+  document.getElementById('wsRes').className='ws-result show';
+  document.getElementById('wsScore').textContent=correct+'/'+total+'問正解！';
+  if(passed){
+    document.getElementById('wsMsg').innerHTML='🎉 合格！バトルモードが解放されたよ！';
+    document.getElementById('wsBattle').style.display='block';
+  } else {
+    document.getElementById('wsMsg').innerHTML='😢 あと'+(pm-correct)+'問正解が必要。もう一度チャレンジ！';
+    document.getElementById('wsRetry').style.display='block';
+  }
+}
+
+// BATTLE
+function enterBattle(id){
+  G.dIdx=id;G.qIdx=0;G.answered=false;G.wasOk=false;G.coopP1=null;G.coopP2=null;
+  var p=PRINCIPLES[id];
+  document.getElementById('stageChip').textContent='ステージ '+(id+1);
+  document.getElementById('topicChip').innerHTML=p.name;
+  document.getElementById('battleScene').style.background=p.battle.bg;
+  showScreen('s-battle');
+  renderDots();loadQ();
+}
+function curQ(){return PRINCIPLES[G.dIdx].battle.fights[G.qIdx];}
+function renderDots(){
+  var fights=PRINCIPLES[G.dIdx].battle.fights;
+  var el=document.getElementById('qProgress');el.innerHTML='';
+  fights.forEach(function(f,i){
+    var d=document.createElement('div');
+    var c='q-dot';
+    if(i<G.qIdx)c+=' done';
+    else if(i===G.qIdx)c+=' cur';
+    if(f.coop)c+=' coop-dot';
+    d.className=c;d.title=f.coop?'🤝協力':'';
+    el.appendChild(d);
+  });
+  // coop chip
+  var sb=document.getElementById('stageBar');
+  var old=sb.querySelector('.coop-chip');if(old)old.remove();
+  if(curQ().coop){
+    var chip=document.createElement('div');chip.className='coop-chip';
+    chip.textContent='🤝 協力バトル！';sb.appendChild(chip);
+  }
+}
+function loadQ(){
+  G.answered=false;G.coopP1=null;G.coopP2=null;
+  var p=PRINCIPLES[G.dIdx];var q=curQ();
+  var esp=document.getElementById('enemySp');
+  esp.textContent=q.coop?(q.coopEnemy||p.battle.sprite):p.battle.sprite;
+  esp.className='f-sprite';
+  if(q.isBoss){esp.classList.add('boss-in');setTimeout(function(){esp.classList.remove('boss-in');},700);}
+  document.getElementById('enemyNm').innerHTML=(q.isBoss?'【BOSS】':'')+p.battle.enemyName;
+  document.getElementById('hero2Slot').style.display=q.coop?'flex':'none';
+  // msg
+  document.getElementById('msgArea').innerHTML=
+    '<div class="msg-box"><div class="msg-scene">'+q.scene+'</div>'
+    +'<div class="msg-enemy">「'+q.eline+'」</div></div>';
+  // choices
+  if(q.coop){renderCoopChoices(q);}else{renderNormalChoices(q);}
+  renderDots();
+}
+function renderNormalChoices(q){
+  var h='<div class="choice-box"><div class="choice-lbl">✦ どちらの判断が正しいか選べ！ ✦</div>'
+    +'<div class="choice-grid">';
+  q.choices.forEach(function(c,i){
+    h+='<button class="c-btn" id="cb_'+i+'" onclick="pickNormal('+i+')">'
+      +'<span class="c-letter">'+String.fromCharCode(65+i)+'</span>'+c.t+'</button>';
+  });
+  h+='</div><button class="btn-next" id="btnNext" style="display:none" onclick="advanceBattle()">▶ つぎへ</button></div>';
+  document.getElementById('choiceArea').innerHTML=h;
+}
+function renderCoopChoices(q){
+  var h='<div class="coop-shield-bar">🛡️ 二人で同じ答えを選ぶと必殺技が発動！</div>'
+    +'<div class="coop-box"><div class="coop-title">🤝 P1・P2それぞれボタンをタップ！</div>'
+    +'<div class="coop-grid">'
+    +'<div class="coop-side"><div class="coop-side-lbl coop-p1-lbl">👤 Player 1</div><div class="coop-opts">';
+  q.choices.forEach(function(c,i){h+='<button class="coop-opt" id="cp1_'+i+'" onclick="answerCoop(1,'+i+')">'+c.t+'</button>';});
+  h+='</div></div>'
+    +'<div class="coop-side"><div class="coop-side-lbl coop-p2-lbl">👤 Player 2</div><div class="coop-opts">';
+  q.choices.forEach(function(c,i){h+='<button class="coop-opt" id="cp2_'+i+'" onclick="answerCoop(2,'+i+')">'+c.t+'</button>';});
+  h+='</div></div></div>'
+    +'<button class="btn-next" id="btnNext" style="display:none" onclick="advanceBattle()">▶ つぎへ</button></div>';
+  document.getElementById('choiceArea').innerHTML=h;
+}
+
+function pickNormal(idx){
+  if(G.answered)return;G.answered=true;
+  var q=curQ();var ok=q.choices[idx].c;G.wasOk=ok;
+  document.querySelectorAll('.c-btn').forEach(function(b,i){
+    b.classList.add('is-off');
+    if(q.choices[i].c)b.classList.add('is-reveal');
+  });
+  var btn=document.getElementById('cb_'+idx);
+  if(ok){btn.classList.remove('is-off','is-reveal');btn.classList.add('is-correct');
+    animHero();setTimeout(function(){animEnemyHit();spawnDmg(q.dmg,true);},350);
+    G.exp+=q.exp;G.gold+=q.gold;checkLevelUp();syncHUD();
+    setTimeout(function(){showMsg(q,true,false);},750);
+  } else {
+    btn.classList.remove('is-off');btn.classList.add('is-wrong');
+    G.hp=Math.max(0,G.hp-q.pdmg);spawnDmg(q.pdmg,false);syncHUD();
+    setTimeout(function(){showMsg(q,false,false);},350);
+  }
+  document.getElementById('btnNext').style.display='block';
+}
+function answerCoop(player,idx){
+  var q=curQ();
+  if(player===1){
+    if(G.coopP1!==null)return;G.coopP1=idx;
+    document.querySelectorAll('[id^="cp1_"]').forEach(function(b){b.classList.add('is-off');});
+    var b=document.getElementById('cp1_'+idx);b.classList.remove('is-off');b.classList.add('sel-p1');
+  } else {
+    if(G.coopP2!==null)return;G.coopP2=idx;
+    document.querySelectorAll('[id^="cp2_"]').forEach(function(b){b.classList.add('is-off');});
+    var b=document.getElementById('cp2_'+idx);b.classList.remove('is-off');b.classList.add('sel-p2');
+  }
+  if(G.coopP1!==null&&G.coopP2!==null)resolveCoop(q);
+}
+function resolveCoop(q){
+  if(G.answered)return;G.answered=true;
+  var same=(G.coopP1===G.coopP2);var ok=same&&q.choices[G.coopP1].c;G.wasOk=ok;
+  // reveal correct
+  q.choices.forEach(function(c,i){
+    var b1=document.getElementById('cp1_'+i);var b2=document.getElementById('cp2_'+i);
+    if(c.c){if(b1)b1.classList.add('c-ok');if(b2)b2.classList.add('c-ok');}
+    else{if(b1&&G.coopP1===i)b1.classList.add('c-ng');if(b2&&G.coopP2===i)b2.classList.add('c-ng');}
+  });
+  if(ok){
+    animHero();document.getElementById('hero2Sp').classList.add('do-atk');
+    setTimeout(function(){animEnemyHit();spawnDmg(q.dmg*1.5,true);
+      setTimeout(function(){document.getElementById('hero2Sp').classList.remove('do-atk');},600);},350);
+    G.exp+=q.exp;G.gold+=q.gold;checkLevelUp();syncHUD();
+    setTimeout(function(){showMsg(q,true,true);},750);
+  } else {
+    G.hp=Math.max(0,G.hp-q.pdmg);spawnDmg(q.pdmg,false);syncHUD();
+    setTimeout(function(){showMsg(q,false,true);},350);
+  }
+  document.getElementById('btnNext').style.display='block';
+}
+function showMsg(q,ok,isCoop){
+  var h='<div class="msg-box"><span class="msg-law">'+q.law+'</span>';
+  if(ok){h+='<div class="msg-ok">✔ '+q.ok+'</div><div class="msg-bonus">EXP +'+q.exp+'　💰 +'+q.gold+'G'+(isCoop?'　✨×1.5ダメージ！':'')+'</div>';}
+  else{h+='<div class="msg-ng">✘ '+q.ng+'</div><div style="font-size:.7rem;color:var(--red);margin-top:4px">HP -'+q.pdmg+'</div>';}
+  h+='</div>';
+  document.getElementById('msgArea').innerHTML=h;
+}
+function advanceBattle(){
+  if(!G.wasOk){loadQ();return;}
+  var q=curQ();
+  if(q.isBoss){document.getElementById('enemySp').classList.add('do-die');setTimeout(function(){showResult(true);},1000);return;}
+  G.qIdx++;
+  var fights=PRINCIPLES[G.dIdx].battle.fights;
+  if(G.qIdx>=fights.length)showResult(true);else loadQ();
+}
+function animHero(){var e=document.getElementById('heroSp');e.classList.add('do-atk');setTimeout(function(){e.classList.remove('do-atk');},600);}
+function animEnemyHit(){var e=document.getElementById('enemySp');e.classList.add('do-hit');setTimeout(function(){e.classList.remove('do-hit');},600);}
+function spawnDmg(val,isEnemy){
+  var sc=document.getElementById('battleScene');var el=document.createElement('div');
+  el.className='fdmg'+(isEnemy?'':' p-dmg');
+  el.textContent='-'+Math.round(val)+(isEnemy?'!!':'');
+  el.style.left=isEnemy?'55%':'8%';el.style.top='26%';
+  sc.appendChild(el);setTimeout(function(){el.remove();},1400);
+}
+
+// LEVEL UP
+function checkLevelUp(){
+  if(G.exp>=G.expNext){
+    G.exp-=G.expNext;G.level++;G.expNext=G.level*100;
+    G.maxHp+=20;G.hp=Math.min(G.hp+30,G.maxHp);syncHUD();
+    document.getElementById('lvTable').innerHTML=
+      '<div class="lv-row"><span>レベル</span><span class="lv-plus">'+(G.level-1)+'→'+G.level+'</span></div>'
+      +'<div class="lv-row"><span>最大HP</span><span class="lv-plus">+20→'+G.maxHp+'</span></div>'
+      +'<div class="lv-row"><span>次EXP</span><span class="lv-plus">'+G.expNext+'</span></div>';
+    document.getElementById('lvOverlay').style.display='block';
+  }
+}
+function closeLv(){document.getElementById('lvOverlay').style.display='none';}
+
+// RESULT
+function showResult(won){
+  var p=PRINCIPLES[G.dIdx];var bt=p.battle;
+  var first=won&&!G.clearedIds.includes(G.dIdx);
+  if(first){G.clearedIds.push(G.dIdx);G.badges.push(bt.reward);G.gold+=100;G.exp+=60;checkLevelUp();syncHUD();}
+  var allDone=G.clearedIds.length>=PRINCIPLES.length;
+  var h='<div class="result-crest">'+(won?(allDone?'🏆':'🎊'):'💔')+'</div>';
+  h+='<div class="result-title">'+(won?(allDone?'全クリア！！':'Victory!'):'Defeated...')+'</div>';
+  if(allDone)h+='<div style="font-size:.83rem;color:var(--green);margin-bottom:8px;line-height:2">全ての魔境を制覇！王国に平和が戻った！</div>';
+  h+='<div class="result-table">'
+    +'<div class="rt-row"><span>結果</span><span class="rt-val '+(won?'ok':'')+'">'+( won?'✔ クリア':'✘ 敗退')+'</span></div>'
+    +'<div class="rt-row"><span>HP</span><span class="rt-val">'+G.hp+'/'+G.maxHp+'</span></div>'
+    +'<div class="rt-row"><span>Lv</span><span class="rt-val">Lv.'+G.level+'</span></div>'
+    +'<div class="rt-row"><span>ゴールド</span><span class="rt-val">💰 '+G.gold+'G</span></div>'
+    +(first?'<div class="rt-row"><span>報酬</span><span class="rt-val ok">+100G ＋'+bt.reward+'</span></div>':'')
+    +'</div>';
+  if(won)h+='<div class="summary-card"><div class="summary-head">✦ まとめ：'+bt.principle+' ✦</div>'+bt.summary+'</div>';
+  h+='<div class="btn-row">'
+    +'<button class="btn-gold" onclick="enterBattle('+G.dIdx+')">▶ 再挑戦</button>'
+    +'<button class="btn-plain" onclick="gotoWorld()">← マップへ</button>'
+    +(allDone?'<button class="btn-gold" onclick="startFinalTest()" style="background:linear-gradient(135deg,var(--green2),var(--green))">📜 最終確認テスト！</button>':'')
+    +'</div>';
+  document.getElementById('resultWrap').innerHTML=h;
+  showScreen('s-result');
+}
+
+
+// ══════════════════════════════════════════════════════
+// FINAL TEST LOGIC
+// ══════════════════════════════════════════════════════
+var FT = { idx:0, correct:0, answers:[] };
+
+function startFinalTest() {
+  FT = { idx:0, correct:0, answers:[] };
+  showScreen('s-finaltest');
+  renderFTQ();
+}
+
+function renderFTQ() {
+  var q = FINAL_TEST[FT.idx];
+  var pct = (FT.idx / FINAL_TEST.length * 100);
+  document.getElementById('ftProg').style.width = pct + '%';
+  document.getElementById('ftNum').textContent = FT.idx + '/' + FINAL_TEST.length;
+  document.getElementById('ftScore').textContent = '正解 ' + FT.correct;
+
+  var h = '<div class="ft-q-card" id="ftCard">';
+  h += '<div class="ft-q-header">'
+     + '<span class="ft-q-num">Q' + q.n + '</span>'
+     + '<span class="ft-q-tag ' + q.tag + '">' + q.lbl + '</span>'
+     + '<div class="ft-q-text">' + q.q + '</div></div>';
+  h += '<div class="ft-opts">';
+  q.opts.forEach(function(opt, oi) {
+    h += '<button class="ft-opt" id="fto_' + oi + '" onclick="answerFT(' + oi + ')">' + opt + '</button>';
+  });
+  h += '</div>';
+  h += '<div class="ft-fb" id="ftFb"></div>';
+  h += '</div>';
+  // show next btn only after answer
+  h += '<button class="btn-next" id="ftNext" style="display:none" onclick="nextFT()">▶ つぎへ</button>';
+  document.getElementById('ftQArea').innerHTML = h;
+}
+
+function answerFT(oi) {
+  var q = FINAL_TEST[FT.idx];
+  var ok = (oi === q.ans);
+  if (ok) FT.correct++;
+  FT.answers.push({ q: FT.idx, ok: ok, chosen: oi });
+
+  // freeze buttons
+  document.querySelectorAll('.ft-opt').forEach(function(b, i) {
+    b.classList.add('off');
+    if (i === q.ans) b.classList.add(ok && i===oi ? 'ok' : 'reveal');
+  });
+  var chosen = document.getElementById('fto_' + oi);
+  if (!ok) chosen.classList.add('ng');
+
+  // card highlight
+  document.getElementById('ftCard').classList.add(ok ? 'done-ok' : 'done-ng');
+
+  // feedback
+  var fb = document.getElementById('ftFb');
+  fb.className = 'ft-fb show ' + (ok ? 'ok' : 'ng');
+  fb.textContent = ok ? ('⭕ ' + q.ok) : ('❌ ' + q.ng);
+
+  // update score display
+  document.getElementById('ftScore').textContent = '正解 ' + FT.correct;
+  document.getElementById('ftNum').textContent = (FT.idx + 1) + '/' + FINAL_TEST.length;
+  document.getElementById('ftProg').style.width = ((FT.idx+1)/FINAL_TEST.length*100) + '%';
+
+  document.getElementById('ftNext').style.display = 'block';
+}
+
+function nextFT() {
+  FT.idx++;
+  if (FT.idx >= FINAL_TEST.length) {
+    showFTResult();
+  } else {
+    renderFTQ();
+  }
+}
+
+function showFTResult() {
+  var total = FINAL_TEST.length;
+  var c = FT.correct;
+  var pct = Math.round(c / total * 100);
+  var rank, rankColor, rankMsg;
+  if (pct === 100) { rank = '🏆 パーフェクト！'; rankColor = '#d4920a'; rankMsg = '全問正解！憲法マスターだ！'; }
+  else if (pct >= 80) { rank = '🥇 優秀！'; rankColor = '#2a9640'; rankMsg = 'よくできました！少しだけ復習しよう。'; }
+  else if (pct >= 60) { rank = '🥈 合格！'; rankColor = '#2a6fc4'; rankMsg = 'もう少し！苦手なところを復習しよう。'; }
+  else { rank = '🥉 もう少し！'; rankColor = '#e03428'; rankMsg = 'もう一度学習し直してみよう！'; }
+
+  // wrong list
+  var wrongList = FT.answers.filter(function(a){return !a.ok;});
+
+  var h = '<div class="result-crest">📜</div>';
+  h += '<div class="result-title" style="color:' + rankColor + '">' + rank + '</div>';
+  h += '<div style="font-size:.88rem;color:var(--ink2);margin-bottom:10px;line-height:1.9">' + rankMsg + '</div>';
+  h += '<div class="result-table">'
+     + '<div class="rt-row"><span>正解数</span><span class="rt-val ok">' + c + ' / ' + total + '</span></div>'
+     + '<div class="rt-row"><span>正答率</span><span class="rt-val ok">' + pct + '%</span></div>'
+     + '</div>';
+
+  if (wrongList.length > 0) {
+    h += '<div class="summary-card"><div class="summary-head">❌ まちがえた問題</div>';
+    wrongList.forEach(function(a) {
+      var q = FINAL_TEST[a.q];
+      h += '<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--border)">'
+         + '<span class="ft-q-tag ' + q.tag + '" style="font-size:.6rem;padding:1px 5px;border-radius:4px">' + q.lbl + '</span> '
+         + '<b style="font-size:.78rem">Q' + q.n + '：' + q.q + '</b><br>'
+         + '<span style="font-size:.72rem;color:var(--red)">✘ あなたの答え：' + q.opts[a.chosen] + '</span><br>'
+         + '<span style="font-size:.72rem;color:var(--green)">✔ 正解：' + q.opts[q.ans] + '</span>'
+         + '</div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<div class="summary-card"><div class="summary-head" style="color:var(--gold)">🎉 全問正解！すばらしい！</div>'
+       + '<div style="font-size:.82rem;line-height:2">4つの原則をすべてマスターした！<br>憲法の守護者として王国は平和になった！</div></div>';
+  }
+
+  h += '<div class="btn-row" style="margin-top:16px">'
+     + '<button class="btn-gold" onclick="startFinalTest()">🔄 もう一度テスト</button>'
+     + '<button class="btn-gold" onclick="playEndroll()" style="background:linear-gradient(135deg,#ffd700,#ff8c00)">🎬 エンドロール</button>'
+     + '<button class="btn-plain" onclick="gotoWorld()">← マップへ</button>'
+     + '</div>';
+
+  document.getElementById('ftResultWrap').innerHTML = h;
+  showScreen('s-ftresult');
+}
+
+// ENDROLL
+function playEndroll(){
+  var stars=document.getElementById('erStars');stars.innerHTML='';
+  for(var i=0;i<80;i++){
+    var s=document.createElement('div');s.className='er-star';
+    var sz=1+Math.random()*3;
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;'
+      +'animation-duration:'+(1.5+Math.random()*3)+'s;animation-delay:'+Math.random()*3+'s;';
+    stars.appendChild(s);
+  }
+  var sc=document.getElementById('erScroll');
+  sc.innerHTML=
+    '<div class="er-logo">⚔️ 憲法クエスト ⚔️</div>'
+    +'<div class="er-sub">～自由の王国を守れ～</div>'
+    +'<div style="font-size:1.4rem;color:#aaddff;margin-bottom:30px;text-align:center">クリアおめでとう！🎉</div>'
+    +'<div class="er-sec-title">🏆 あなたが学んだこと</div>'
+    +'<div class="er-item-name">👑 国民主権</div><div class="er-item-desc">国のことを決めるのはわたしたち国民</div>'
+    +'<div class="er-item-name">🌸 基本的人権の尊重</div><div class="er-item-desc">生まれながらの権利を守る</div>'
+    +'<div class="er-item-name">🕊️ 平和主義</div><div class="er-item-desc">戦争しない・話し合いで解決</div>'
+    +'<div class="er-item-name">🏛️ 国会の仕組み</div><div class="er-item-desc">国権の最高機関・二院制</div>'
+    +'<div class="er-sec-title">⚔️ 倒した魔物たち</div>'
+    +'<div class="er-item-name">👺 ドクサイの先兵</div>'
+    +'<div class="er-item-name">🧟 言論弾圧の魔神クロゼル</div>'
+    +'<div class="er-item-name">🐉 武力神ガルダ</div>'
+    +'<div class="er-item-name">👾 混乱の魔将軍カオシア</div>'
+    +'<div class="er-sec-title">🤝 協力バトルの記録</div>'
+    +'<div style="font-size:.9rem;color:#ccddff;line-height:2.4;text-align:center">友だちと力を合わせて<br>必殺技を発動させたね！<br>憲法はみんなで守るものだよ。</div>'
+    +'<div class="er-badges">'+G.badges.join(' ')+'</div>'
+    +'<div class="er-sec-title">📜 大切な条文</div>'
+    +'<div style="font-size:.85rem;color:#ccddff;line-height:2.6;text-align:center">'
+    +'憲法 前文・第1条（国民主権）<br>第9条（戦争の放棄）<br>第11条〜（基本的人権）<br>第41条（国会）</div>'
+    +'<div class="er-thanks">ありがとう！</div>'
+    +'<div class="er-msg">憲法はむずかしい言葉が多いけど、<br>「みんなが幸せに生きられる社会」の<br>ためにある大切なものだよ。<br><br>これからも憲法の精神を大切にしてね。</div>'
+    +'<div class="er-end">THE END</div>';
+  var er=document.getElementById('endroll');er.classList.add('show');
+  sc.style.animation='none';sc.offsetHeight;
+  sc.style.animation='erScroll 26s linear forwards';
+}
+function closeEndroll(){document.getElementById('endroll').classList.remove('show');}
+
+// RESET
+function confirmReset(){
+  if(confirm('ゲームを最初からやり直しますか？\n全ての記録が消えます。'))resetAll();
+}
+function resetAll(){
+  G={hp:100,maxHp:100,exp:0,expNext:100,level:1,gold:0,badges:[],
+     learnedIds:[],passedIds:[],clearedIds:[],
+     dIdx:null,qIdx:0,answered:false,wasOk:false,wsIdx:null,wsAnswers:[],coopP1:null,coopP2:null};
+  syncHUD();buildMap();showScreen('s-world');
+}
+
+// PARTICLES
+(function(){
+  var el=document.getElementById('ptcl');
+  var colors=['rgba(255,220,80,.5)','rgba(120,220,120,.4)','rgba(100,180,255,.4)'];
+  for(var i=0;i<18;i++){
+    var p=document.createElement('div');var sz=4+Math.random()*8;p.className='p';
+    p.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;'
+      +'background:'+colors[Math.floor(Math.random()*colors.length)]+';'
+      +'animation-duration:'+(3+Math.random()*4)+'s;animation-delay:'+Math.random()*4+'s;';
+    el.appendChild(p);
+  }
+})();
+</script>
+</body>
+</html>
